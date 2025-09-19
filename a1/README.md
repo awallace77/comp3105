@@ -20,11 +20,11 @@ Make sure you have python 3.11 installed.
 
 ### Workflow
 
-To start working please create a branch off of `main` by using the command `git checkout -b <your branch name>`.
+To start working please create a branch off of `main` by using the command `git checkout -b <your branch name>` <br/>
 
-Once you complete a task / question, save all your files add run the following to commit and push to the repo:
-`git add .` where "." is the current folder (you can also specify the path to specific files)
-`git commit -m "<A short description about the changes here>"`
-`git push -u origin <your branch name>`
+Once you complete a task / question, save all your files add run the following to commit and push to the repo:<br/>
+`git add .` where "." is the current folder (you can also specify the path to specific files)<br/>
+`git commit -m "<A short description about the changes here>"`<br/>
+`git push -u origin <your branch name>`<br/>
 
 Your changes will now be pushed to the remote repository where we can merge into the main branch via a Pull request.
