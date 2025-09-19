@@ -40,21 +40,71 @@ Andrew Wallace - 101210291\\
   \begin{enumerate}[(a)] 
     \item (1\%) $L_2$ Regression \\
     Please see A1codes.py for implementation.
-    \item (3\%) $L_\infty$ Regression
+    \item (3\%) $L_\infty$ Regression \\
+      Here we are going to solve the $L_\infty$ loss regression problem
+      \begin{center}
+        $\mathbf{w} = \text{argmin}_{\mathbf{w} \in \mathbb{R}^d} = ||X \mathbf{w} - \mathbf{y}||$
+      \end{center}
+      Recall that this optimization can be expressed as a linear programming problem with the joint paramters $\begin{bmatrix}
+        \mathbf{w} \\[-0.5em] 
+        \substack{d \times 1} \\[0.15em]
+        \delta \\[-0.5em] 
+        \substack{1 \times 1} \\[0.15em]
+      \end{bmatrix} \in \mathbb{R}^{d+1}$ as follows
+      \begin{center}
+        $\text{min}_{\mathbf{w}, \delta} \delta$ \\
+        s.t. \\
+        $\delta \ge 0 \iff -\delta \le 0$ \\
+        $X \mathbf{w} - \mathbf{y} \preceq \delta \cdot \mathbf{1}_n \iff X \mathbf{w} - \delta \cdot \mathbf{1}_n \preceq \mathbf{y}$ \\
+        $\mathbf{y} - X \mathbf{w} \preceq \delta \cdot \mathbf{1}_n \iff -X \mathbf{w} - \delta \cdot \mathbf{1}_n \preceq -\mathbf{y}$
+      \end{center}
+      In the following answers, we will convert the optimization to a form that is solvable by the \textbf{cxvopt} linear programming (LP) solver, which solves the following form of LP
+      \begin{center}
+        $\text{min}_{\mathbf{u}}\mathbf{c}^T \mathbf{u}$ \\
+        s.t. $G \mathbf{u} \preceq \mathbf{h}$
+      \end{center}
+      Let the unknown variables be $\mathbf{u} = \begin{bmatrix}
+        \mathbf{w} \\[-0.5em] 
+        \substack{d \times 1} \\[0.15em]
+        \delta \\[-0.5em] 
+        \substack{1 \times 1} \\[0.15em]
+      \end{bmatrix} \in \mathbb{R}^{d+1}$ \\
+      For the constraints, since we have three sets of constraints, the matrix $G$ and $\mathbf{h}$ can be decomposed into three parts 
+      \begin{center}
+        $G \cdot \mathbf{u} = 
+        \begin{bmatrix}
+          G^{(1)} \\[-0.5em] 
+          \substack{1 \times (d+1)} \\[0.15em]
+          G^{(2)} \\[-0.5em] 
+          \substack{n \times (d+1)} \\[0.15em]
+          G^{(3)} \\[-0.5em] 
+          \substack{n \times (d+1)} \\[0.15em]
+        \end{bmatrix} \cdot 
+        \begin{bmatrix}
+          \mathbf{w} \\
+          \delta 
+        \end{bmatrix} \preceq 
+        \begin{bmatrix}
+          \mathbf{h}^{(1)} \\[-0.5em] 
+          \substack{1 \times 1} \\[0.15em]
+          \mathbf{h}^{(2)} \\[-0.5em] 
+          \substack{d \times 1} \\[0.15em]
+          \mathbf{h}^{(3)} \\[-0.5em] 
+          \substack{d \times 1} \\[0.15em]
+        \end{bmatrix}$
+      \end{center}
     \begin{enumerate}[(b.1)]
       \item (0.25\%) For the objective function, we want $\mathbf{c}^T \mathbf{u} = \delta$. What should $\mathbf{c} \in \mathbb{R}^{d+1}$ be? 
       Recall that $\mathbf{u} = \begin{bmatrix} \mathbf{w} \\ \delta \end{bmatrix}$ \\
       For the objective function to be $\delta$ we have: \\
-      $\mathbf{c}^T \mathbf{u}$ \\
-      $= [c_1, c_2, \ldots c_d, c_{d+1}] \cdot 
+      $\mathbf{c}^T \mathbf{u} = [c_1, c_2, \ldots c_d, c_{d+1}] \cdot 
       \begin{bmatrix}
         w_1 \\
         w_2 \\
         \vdots \\
         w_d \\
         \delta 
-        \end{bmatrix}$ \\
-      $= c_1 w_1 + c_2 w_2 + \ldots + w_d u_d + c_{d+1} \delta$ \\
+        \end{bmatrix} = c_1 w_1 + c_2 w_2 + \ldots + w_d u_d + c_{d+1} \delta$ \\
       Now let $c_1 = c_2 = \ldots = c_d = 0$ \\
       And $c_{d+1} = 1$ \\
       This gives us: \\
@@ -68,191 +118,120 @@ Andrew Wallace - 101210291\\
         1
         \end{bmatrix}$ \\
       Where $c_1 = c_2 = \ldots = c_d =0$ and $c_{d+1} = 1$.
-
       \item (0.25\%) We want $G^{(1)}\mathbf{u} \preceq \mathbf{h}^{(1)} \iff \delta \ge 0.$ What should $G^{(1)} \in \mathbb{R}^{1 \times (d+1)}$ and $h^{(1)} \in \mathbb{R}$ be? \\
-      Here $G \mathbf{u}$ symbolizes the constraints we have for $\delta \ge 0$ and the linear equations formed by $X\mathbf{w} - \mathbf{y} \preceq \delta \cdot \mathbf{1_n}$ and $\mathbf{y} - X\mathbf{w} \preceq \delta \cdot \mathbf{1_n}$. So, the first row of $G$ should symbolize our first constraint $\delta \ge 0$. Since the inequality $G \mathbf{u} \preceq \mathbf{h}$, we can test our first constraint be setting the inner product between $G_1$ and $\mathbf{u}$ to zero and have $h_1$ be $\delta$. This gives us: \\
-      $G^{(1)} \in \mathbb{R}^{1 \times (d+1)} = [0, 0, \ldots, 0]$  and \\
-      $\mathbf{h}^{(1)} \in \mathbb{R} = \delta$. \\
-      This results in a first linear equation of: \\
-      $0 w_1 + 0 w_2 + \ldots + 0 w_d + 0 \delta \preceq \delta$ \\
-      $0 \preceq \delta$  \\
-      $\delta \ge 0$ 
-      \item (0.25\%) We want $G^{(2)}\mathbf{u} \preceq \mathbf{h}^{(2)} \iff X \mathbf{w} - \mathbf{y} \preceq \delta \cdot \mathbf{1_n}.$ What should $G^{(2)} \in \mathbb{R}^{n \times (d+1)}$ and $h^{(2)} \in \mathbb{R}^n$ be?
-      Recall we want \\
-      $G \cdot \mathbf{u} = \begin{bmatrix}
-        G^{(1)} \\
-        G^{(2)} \\
-        G^{(3)} \\
-      \end{bmatrix} \cdot 
-      \begin{bmatrix}
-       \mathbf{w} \\
-       \delta 
-      \end{bmatrix} \preceq \begin{bmatrix}
-        \mathbf{h^{(1)}} \\
-        \mathbf{h^{(2)}} \\
-        \mathbf{h^{(3)}}
-      \end{bmatrix} = \mathbf{h}$ \\
-      Note that $G^{(2)}$ is in $\mathbb{R}^{n \times (d+1)}$. Our second constraint $X \mathbf{w} - \mathbf{y} \preceq \delta \cdot \mathbf{1_n}$ which gives us: \\
-      $\begin{bmatrix}
-        x_1^T \cdot \mathbf{w} \\
-        x_2^T \cdot \mathbf{w}\\
-        \vdots \\
-        x_n^T \cdot \mathbf{w} \\
-      \end{bmatrix} -  \begin{bmatrix}
-        y_1 \\
-        y_2  \\
-        \vdots \\
-        y_n
-      \end{bmatrix} \preceq \begin{bmatrix}
-        \delta \\
-        \delta \\ 
-        \vdots \\
-        \delta \\
-      \end{bmatrix}$ \\
-      Which gives us the following linear equations: \\
-      $x_1^T \mathbf{w} - y_1 \preceq \delta$ \\
-      $x_2^T \mathbf{w} - y_2 \preceq \delta$ \\
-      $\vdots$ \\
-      $x_n^T \mathbf{w} - y_n \preceq \delta$ \\
-      \\ Let $x_ij$ denote the $i^{\text{th}}$ row and $j^{\text{th}}$ column of matrix $X = \begin{bmatrix}
-        x_1^T \\
-        x_2^T \\
-        \vdots \\
-        x_n^T 
-      \end{bmatrix}$ for $i \in \{1, 2, \ldots, n\}$ and $j \in \{1, 2, \ldots, d\}$
-      We can map this into the form $G^{(2)} \cdot \mathbf{u} \preceq \mathbf{h}^{(2)}$ where $G^{(2)} = \begin{bmatrix}
-        x_{11} & x_{12} & \ldots & x_{1d} & -1 \\
-        x_{21} & x_{22} & \ldots & x_{2d} & -1 \\
-        \vdots \\
-        x_{n1} & x_{n2} & \ldots & x_{nd} & -1 \\
-      \end{bmatrix}$ \\
-      $\mathbf{u} = \begin{bmatrix}
-        \mathbf{w} \\
-        \delta
-      \end{bmatrix}$ \\
-      $\mathbf{h}^{(2)} = \begin{bmatrix}
-        y_1 \\
-        y_2 \\
-        \vdots \\
-        y_n
-      \end{bmatrix}$ \\
-      $G^{(2)} \cdot \mathbf{u} \preceq \mathbf{h}^{(2)}$ \\
-      $\begin{bmatrix}
-        x_{11} & x_{12} & \ldots & x_{1d} & -1 \\
-        x_{21} & x_{22} & \ldots & x_{2d} & -1 \\
-        \vdots \\
-        x_{n1} & x_{n2} & \ldots & x_{nd} & -1 \\
-      \end{bmatrix} \cdot 
-      \begin{bmatrix}
-        \mathbf{w} \\
-        \delta
-      \end{bmatrix} \preceq 
-      \begin{bmatrix}
-        y_1 \\
-        y_2 \\
-        \vdots \\
-        y_n
-      \end{bmatrix}$ \\
-      $x_1^T \cdot \mathbf{w} + (-\delta) \preceq y_1$\\
-      $x_2^T \cdot \mathbf{w} + (-\delta) \preceq y_2$\\
-      $\vdots$\\
-      $x_n^T \cdot \mathbf{w} + (-\delta) \preceq y_n$\\
-      Which gives us our original constraint: \\
-      $x_1^T \mathbf{w} - y_1 \preceq \delta$ \\
-      $x_2^T \mathbf{w} - y_2 \preceq \delta$ \\
-      $\vdots$ \\
-      $x_n^T \mathbf{w} - y_n \preceq \delta$
-
-      \item (0.25\%) We want $G^{(3)}\mathbf{u} \preceq \mathbf{h}^{(3)} \iff \mathbf{y} - X \mathbf{w} \preceq \delta \cdot \mathbf{1_n}.$ What should $G^{(3)} \in \mathbb{R}^{n \times (d+1)}$ and $h^{(3)} \in \mathbb{R}^n$ be?
-      Similar to (b.3) we can model our constraint in terms of $G$ and $\mathbf{u}$. \\
-      Again let $x_ij$ denote the $i^{\text{th}}$ row and $j^{\text{th}}$ column of matrix $X = \begin{bmatrix}
-        x_1^T \\
-        x_2^T \\
-        \vdots \\
-        x_n^T 
-      \end{bmatrix}$\\ 
-      for $i \in \{1, 2, \ldots, n\}$ and $j \in \{1, 2, \ldots, d\}$. \\
-      Our constraint is in the form: \\
-      $y_1 - (x_{11} w_1 + x_{12} w_2 + \ldots + x_{1d} w_d) \preceq \delta$ \\
-      $y_2 - (x_{21} w_1 + x_{22} w_2 + \ldots + x_{2d} w_d) \preceq \delta$ \\ 
-      $\vdots$ \\
-      $y_n - (x_{n1} w_1 + x_{n2} w_2 + \ldots + x_{nd} w_d) \preceq \delta$ \\
-      Now we map where $G^{(3)} = \begin{bmatrix}
-        -x_{11} & -x_{12} & \ldots & -x_{1d} & -1 \\
-        -x_{21} & -x_{22} & \ldots & -x_{2d} & -1 \\
-        \vdots \\
-        -x_{n1} & -x_{n2} & \ldots & -x_{nd} & -1 \\
-      \end{bmatrix}$ \\
-      $\mathbf{u} = \begin{bmatrix}
-        \mathbf{w} \\
-        \delta
-      \end{bmatrix}$ \\
-      $\mathbf{h}^{(3)} = \begin{bmatrix}
-        -y_1 \\
-        -y_2 \\
-        \vdots \\
-        -y_n
-      \end{bmatrix}$ \\
-      $G^{(3)} \cdot \mathbf{u} \preceq \mathbf{h}^{(3)}$ \\
-      $\begin{bmatrix}
-        -x_{11} & -x_{12} & \ldots & -x_{1d} & -1 \\
-        -x_{21} & -x_{22} & \ldots & -x_{2d} & -1 \\
-        \vdots \\
-        -x_{n1} & -x_{n2} & \ldots & -x_{nd} & -1 \\
-      \end{bmatrix} \cdot 
-      \begin{bmatrix}
-        \mathbf{w} \\
-        \delta
-      \end{bmatrix} \preceq 
-      \begin{bmatrix}
-        -y_1 \\
-        -y_2 \\
-        \vdots \\
-        -y_n
-      \end{bmatrix}$ \\
-      $-(x_1^T \cdot \mathbf{w}) + (-\delta) \preceq -y_1$\\
-      $-(x_2^T \cdot \mathbf{w}) + (-\delta) \preceq -y_2$\\
-      $\vdots$\\
-      $-(x_n^T \cdot \mathbf{w}) + (-\delta) \preceq -y_n$\\
-      Which gives us our original constraint: \\
-      $y_1 - (x_1^T \cdot \mathbf{w}) \preceq \delta$ \\
-      $y_2 - (x_2^T \cdot \mathbf{w}) \preceq \delta$ \\
-      $\vdots$ \\
-      $y_n - (x_n^T \cdot \mathbf{w}) \preceq \delta$ \\
-      $\therefore$ we have the following linear programming optimization solvable by the cxvopt linear programming solver in the form: 
+      Recall the first constraint: $-\delta \le 0$ \\
+      We want
       \begin{center}
-        
-        $\min_u \mathbf{c}^T \mathbf{u}$ \\
-        s.t $G \mathbf{u} \preceq \mathbf{h}$
+        $\underset{1 \times (d + 1)}{G^{(1)}} \cdot \mathbf{u} \preceq \underset{n \times 1}{\mathbf{h}^{(1)}}$ \\
       \end{center}
-      where \\
-      $G = \begin{bmatrix}
-        0 & 0 & \ldots & 0 & 0 \\ 
-        x_{11} & x_{12} & \ldots & x_{1d} & -1 \\ 
-        x_{21} & x_{22} & \ldots & x_{2d} & -1 \\ 
-        \vdots \\
-        x_{n1} & x_{n2} & \ldots & x_{nd} & -1 \\ 
-        -x_{11} & -x_{12} & \ldots & -x_{1d} & -1 \\ 
-        -x_{21} & -x_{22} & \ldots & -x_{2d} & -1 \\ 
-        \vdots \\
-        -x_{n1} & -x_{n2} & \ldots & -x_{nd} & -1
+      We will now map our constraint into this form.
+      \begin{center}
+        $\begin{bmatrix}
+          \underset{1 \times d}{G^{(11)}} && \underset{1 \times 1}{G^{(12)}} 
+        \end{bmatrix} \cdot 
+        \begin{bmatrix}
+          \mathbf{w} \\
+          \delta
+        \end{bmatrix} \preceq 
+        \underset{n \times 1}{\mathbf{h}^{(1)}} \iff -\delta \le 0$ \\
+        $\underset{1 \times d}{G^{(11)}} \cdot \mathbf{w} + \underset{1 \times 1}{G^{(12)}} \cdot \delta = -\delta \le 0 = \underset{n \times 1}{\mathbf{h}^{(1)}}$ \\
+      \end{center}
+      So, \\
+      $\underset{1 \times d}{G^{(11)}} = \mathbf{0}_{1 \times d}$ \\
+      $\underset{1 \times 1}{G^{(12)}} = -1$ \\
+      $\underset{1 \times (d+1)}{G^{(1)}} = 
+      \begin{bmatrix}
+        \mathbf{0}_{1 \times d} & -1 
       \end{bmatrix}$ \\
+      $\underset{n \times 1}{\mathbf{h}^{(1)}} = \mathbf{1}_{n \times 1}$
+      \item (0.25\%) We want $G^{(2)}\mathbf{u} \preceq \mathbf{h}^{(2)} \iff X \mathbf{w} - \mathbf{y} \preceq \delta \cdot \mathbf{1_n}.$ What should $G^{(2)} \in \mathbb{R}^{n \times (d+1)}$ and $h^{(2)} \in \mathbb{R}^n$ be? \\
+      Recall our second constraint is \\
+      $X \mathbf{w} - \mathbf{y} \preceq \delta \cdot \mathbf{1}_n \iff X \mathbf{w} - \delta \cdot \mathbf{1}_n \preceq \mathbf{y}$ \\
+      We want
+      \begin{center}
+        $\underset{n \times (d + 1)}{G^{(2)}} \cdot \mathbf{u} \preceq \underset{n \times 1}{\mathbf{h}^{(2)}}$ \\
+      \end{center}
+      We will now map our constraint into this form.
+      \begin{center}
+        $\begin{bmatrix}
+          \underset{n \times d}{G^{(21)}} && \underset{n \times 1}{G^{(22)}} 
+        \end{bmatrix} \cdot 
+        \begin{bmatrix}
+          \mathbf{w} \\
+          \delta
+        \end{bmatrix} \preceq 
+        \underset{n \times 1}{\mathbf{h}^{(2)}} \iff X \mathbf{w} - \delta \cdot \mathbf{1}_n \preceq \mathbf{y}$ \\
+        $\underset{n \times d}{G^{(21)}} \cdot \mathbf{w} + \underset{n \times 1}{G^{(22)}} \cdot \delta = X \mathbf{w} - \delta \cdot \mathbf{1}_n \preceq \mathbf{y} = \underset{n \times 1}{\mathbf{h}^{(1)}}$ \\
+      \end{center}
+      So, \\
+      $\underset{n \times d}{G^{(21)}} = X$ \\
+      $\underset{n \times 1}{G^{(22)}} = -\mathbf{1}_{n \times 1}$ \\
+      $\underset{n \times (d+1)}{G^{(2)}} = 
+      \begin{bmatrix}
+        X & -\mathbf{1}_{n \times 1}
+      \end{bmatrix}$ \\
+      $\underset{n \times 1}{h^{(2)}} = \mathbf{y}$
+      \item (0.25\%) We want $G^{(3)}\mathbf{u} \preceq \mathbf{h}^{(3)} \iff \mathbf{y} - X \mathbf{w} \preceq \delta \cdot \mathbf{1_n}.$ What should $G^{(3)} \in \mathbb{R}^{n \times (d+1)}$ and $h^{(3)} \in \mathbb{R}^n$ be?\\
+      Recall our third constraint is \\
+      $\mathbf{y} - X \mathbf{w} \preceq \delta \cdot \mathbf{1}_n \iff -X \mathbf{w} - \delta \cdot \mathbf{1}_n \preceq -\mathbf{y}$ \\
+      We want
+      \begin{center}
+        $\underset{n \times (d + 1)}{G^{(3)}} \cdot \mathbf{u} \preceq \underset{n \times 1}{\mathbf{h}^{(3)}}$ \\
+      \end{center}
+      We will now map our constraint into this form.
+      \begin{center}
+        $\begin{bmatrix}
+          \underset{n \times d}{G^{(31)}} && \underset{n \times 1}{G^{(32)}} 
+        \end{bmatrix} \cdot 
+        \begin{bmatrix}
+          \mathbf{w} \\
+          \delta
+        \end{bmatrix} \preceq 
+        \underset{n \times 1}{\mathbf{h}^{(3)}} \iff -X \mathbf{w} - \delta \cdot \mathbf{1}_n \preceq -\mathbf{y}$ \\
+        $\underset{n \times d}{G^{(31)}} \cdot \mathbf{w} + \underset{n \times 1}{G^{(32)}} \cdot \delta = -X \mathbf{w} - \delta \cdot \mathbf{1}_n \preceq -\mathbf{y} = \underset{n \times 1}{\mathbf{h}^{(3)}}$ \\
+      \end{center}
+      So, \\
+      $\underset{n \times d}{G^{(31)}} = -X$ \\
+      $\underset{n \times 1}{G^{(32)}} = -\mathbf{1}_{n \times 1}$ \\
+      $\underset{n \times (d+1)}{G^{(3)}} = 
+      \begin{bmatrix}
+        -X & -\mathbf{1}_{n \times 1}
+      \end{bmatrix}$ \\
+      $\underset{n \times 1}{h^{(3)}} = -\mathbf{y}$
+      
+      \item (2\%) Based on your derivations in (b), implement a Python function \begin{center}$\mathbf{w} = \text{minimizeLinf}(X,y)$ \end{center} that returns a $d \times 1$ vector of weights/parameters $\mathbf{w}$ corresponding to the solution of minimum $L_\infty$ loss.
+      \begin{center}
+        $\mathbf{w} = \text{argmin}_{w \in \mathbb{R}^d} || X \mathbf{w} - \mathbf{y}||$
+      \end{center}
+
+      Based on our derivations in (b), we result in \\
+      $\mathbf{c} = \begin{bmatrix}
+        0 \\
+        0 \\ 
+        \vdots \\
+        1
+      \end{bmatrix} \in \mathbb{R}^{d+1}$ \\[0.5em]
       $\mathbf{u} = \begin{bmatrix}
         \mathbf{w} \\
         \delta
-      \end{bmatrix}$ \\
-      $h = \begin{bmatrix}
-        \delta \\
-        y_1 \\
-        y_2 \\
-        \vdots \\
-        y_n \\
-        -y_1 \\
-        -y_2 \\
-        \vdots \\
-        -y_n
-      \end{bmatrix}$
+      \end{bmatrix} \in \mathbb{R}^{d+1}$ \\[0.5em]
+      $G = \begin{bmatrix}
+        \mathbf{0}_{1 \times d} & -1 \\
+        X & -\mathbf{-1}_n
+        -X & -\mathbf{-1}_n
+      \end{bmatrix} \in \mathbb{R}^{(2n+1) \times (d+1)}$ \\[0.5em]
+      $\mathbf{h} = \begin{bmatrix}
+        0 \\
+        \mathbf{y} \\
+        -\mathbf{y}
+      \end{bmatrix} \in \mathbb{R}^{2n+1}$ 
+      \begin{center}
+        s.t. \\
+        $\underset{(2n+1) \times (d+1)}{G} \cdot \underset{(d+1) \times 1}{\mathbf{u}} \preceq \underset{(2n+1) \times 1}{\mathbf{h}}$
+      \end{center}
 
+
+      Please see A1codes.py for full implementation. 
     \end{enumerate}
   \end{enumerate}
 
