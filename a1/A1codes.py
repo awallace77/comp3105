@@ -77,7 +77,7 @@ def minimizeLinf(X, y):
 
 '''
     evaluate_L2_Linf
-    Input loss: the 2x2 loss matrix
+    Input loss: the 2x2 loss matrix (by reference)
     Input run: the current run (number)
     Input w_L2: the L2 model 
     Input w_Linf: the Linf model
@@ -89,6 +89,31 @@ def evaluate_L2_Linf(loss, run, X, w_L2, w_Linf, y):
     loss[run][0][1] = Linf_loss(X, w_L2, y)
     loss[run][1][0] = L2_loss(X, w_Linf, y)
     loss[run][1][1] = Linf_loss(X, w_Linf, y) 
+
+'''
+    avg_L2_Linf_loss
+    Input loss: the 2x2 model x loss matrix 
+    Input n_runs: the total number of runs for your experiment
+    Output: the averge L2 and Linf loss
+'''
+def avg_L2_Linf_loss(loss, n_runs):
+    avg_loss = np.zeros([2,2])
+
+    # Total L2 model - L2 losses and Linf losses
+    total_L2model_L2_loss = np.sum(loss[:, 0, 0]) 
+    total_L2model_Linf_loss = np.sum(loss[:, 0, 1]) 
+
+    # Total Linf model - L2 losses and Linf losses
+    total_Linfmodel_L2_loss = np.sum(loss[:, 1, 0])
+    total_Linfmodel_Linf_loss = np.sum(loss[:, 1, 1]) 
+    
+    avg_loss[0][0] = total_L2model_L2_loss / n_runs
+    avg_loss[0][1] = total_L2model_Linf_loss / n_runs   
+    avg_loss[1][0] = total_Linfmodel_L2_loss / n_runs
+    avg_loss[1][1] = total_Linfmodel_Linf_loss / n_runs 
+
+    return avg_loss
+
 
 '''
     synRegExperiments
@@ -144,63 +169,19 @@ def synRegExperiments():
         # TRAINING DATA: Evaluate the two models' performance (for each model,
         # calculate the L2 and L infinity losses on the training
         # data). Save them to `train_loss`
-            # L2 model
-        L2model_L2_loss = L2_loss(Xtrain, w_L2, ytrain) 
-        L2model_Linf_loss = Linf_loss(Xtrain, w_L2, ytrain)
-        train_loss[r][0][0] = L2model_L2_loss
-        train_loss[r][0][1] = L2model_Linf_loss
-            # L_inf model
-        Linfmodel_L2_loss = L2_loss(Xtrain, w_Linf, ytrain)
-        Linfmodel_Linf_loss = Linf_loss(Xtrain, w_Linf, ytrain) 
-        train_loss[r][1][0] = Linfmodel_L2_loss
-        train_loss[r][1][1] = Linfmodel_Linf_loss
-
+        evaluate_L2_Linf(train_loss, r, Xtrain, w_L2, w_Linf, ytrain)
+        
         # TEST DATA: Evaluate the two models' performance (for each model,
         # calculate the L2 and L infinity losses on the test
         # data). Save them to `test_loss`
-            # L2 model
-        L2model_L2_loss = L2_loss(Xtest, w_L2, ytest)
-        L2model_Linf_loss = Linf_loss(Xtest, w_L2, ytest)
-        test_loss[r][0][0] = L2model_L2_loss
-        test_loss[r][0][1] = L2model_Linf_loss
-            # L_inf model
-        Linfmodel_L2_loss = L2_loss(Xtest, w_Linf, ytest)
-        Linfmodel_Linf_loss = Linf_loss(Xtest, w_Linf, ytest)
-        test_loss[r][1][0] = Linfmodel_L2_loss
-        test_loss[r][1][1] = Linfmodel_Linf_loss
+        evaluate_L2_Linf(test_loss, r, Xtest, w_L2, w_Linf, ytest)
 
     # TRAINING DATA - compute the average losses over runs
-    avg_train_loss = np.zeros([2,2])
-
-    # Total L2 model - L2 losses and Linf losses
-    total_L2model_L2_loss = np.sum(train_loss[:, 0, 0]) 
-    total_L2model_Linf_loss = np.sum(train_loss[:, 0, 1]) 
-
-    # Total Linf model - L2 losses and Linf losses
-    total_Linfmodel_L2_loss = np.sum(train_loss[:, 1, 0]) 
-    total_Linfmodel_Linf_loss = np.sum(train_loss[:, 1, 1]) 
-    
-    avg_train_loss[0][0] = total_L2model_L2_loss / n_runs
-    avg_train_loss[0][1] = total_L2model_Linf_loss / n_runs   
-    avg_train_loss[1][0] = total_Linfmodel_L2_loss / n_runs
-    avg_train_loss[1][1] = total_Linfmodel_Linf_loss / n_runs 
+    avg_train_loss = avg_L2_Linf_loss(train_loss, n_runs)
     print(avg_train_loss)
     
     # TEST DATA - compute the average losses over runs
-    avg_test_loss = np.zeros([2,2])
-    
-    # Total L2model L2 losses and Linf losses
-    total_L2model_L2_loss = np.sum(test_loss[:, 0, 0]) 
-    total_L2model_Linf_loss = np.sum(test_loss[:, 0, 1]) 
-
-    # Total Linf Model L2 losses and Linf losses
-    total_Linfmodel_L2_loss = np.sum(test_loss[:, 1, 0]) 
-    total_Linfmodel_Linf_loss = np.sum(test_loss[:, 1, 1]) 
-    
-    avg_test_loss[0][0] = total_L2model_L2_loss / n_runs
-    avg_test_loss[0][1] = total_L2model_Linf_loss / n_runs
-    avg_test_loss[1][0] = total_Linfmodel_L2_loss / n_runs
-    avg_test_loss[1][1] = total_Linfmodel_Linf_loss / n_runs
+    avg_test_loss = avg_L2_Linf_loss(test_loss, n_runs)
     print(avg_test_loss)
     
     # Return a 2-by-2 training loss variable and a 2-by-2 test loss variable
