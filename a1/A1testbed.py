@@ -31,7 +31,8 @@ def _plotReg():
 	plt.plot(X[:, 1], y_hat_L2, 'b', marker=None, label='$L_2$')
 	plt.plot(X[:, 1], y_hat_Linf, 'r', marker=None, label='$L_\infty$')
 	plt.legend()
-	plt.show()
+	plt.savefig('plotReg.png')
+	# plt.show()
 
 
 def _plotCls():
@@ -65,4 +66,4 @@ def _plotCls():
 if __name__ == "__main__":
 
 	_plotReg()
-	_plotCls()
+	# _plotCls()
