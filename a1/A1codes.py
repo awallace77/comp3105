@@ -2,6 +2,7 @@
 import numpy as np
 from cvxopt import matrix, solvers
 import pandas as pd
+import os
 
 '''
     L2_loss
@@ -254,16 +255,71 @@ def runCCS(dataset_folder):
         modell2 = minimizeL2(Xfh,yfh)
         modellinf = minimizeLinf(Xfh,yfh)
 
-    # TODO: Evaluate the two models' performance (for each model,
+    # Done: Evaluate the two models' performance (for each model,
     # calculate the L2 and L infinity losses on the training
     # data). Save them to `train_loss`
+    avg_train_loss = np.zeros([2,2])
+
+    # L2 model
+    L2model_L2_loss = L2_loss(Xfh, modell2, yfh) 
+    L2model_Linf_loss = Linf_loss(Xfh, modell2, yfh)
+    train_loss[r][0][0] = L2model_L2_loss
+    train_loss[r][0][1] = L2model_Linf_loss
+    # L_inf model
+    Linfmodel_L2_loss = L2_loss(Xfh, modellinf, yfh) 
+    Linfmodel_Linf_loss = Linf_loss(Xfh, modellinf, yfh)
+    train_loss[r][1][0] = Linfmodel_L2_loss
+    train_loss[r][1][1] = Linfmodel_Linf_loss
 
 
-
-    # TODO: Evaluate the two models' performance (for each model,
+    # Done: Evaluate the two models' performance (for each model,
     # calculate the L2 and L infinity losses on the test
     # data). Save them to `test_loss`
+    L2model_L2_loss = L2_loss(Xsh, modell2, ysh) 
+    L2model_Linf_loss = Linf_loss(Xsh, modell2, ysh)
+    test_loss[r][0][0] = L2model_L2_loss
+    test_loss[r][0][1] = L2model_Linf_loss
+    # L_inf model
+    Linfmodel_L2_loss = L2_loss(Xsh, modellinf, ysh) 
+    Linfmodel_Linf_loss = Linf_loss(Xsh, modellinf, ysh)
+    test_loss[r][1][0] = Linfmodel_L2_loss
+    test_loss[r][1][1] = Linfmodel_Linf_loss
+
     # TODO: compute the average losses over runs
+
+    # TRAINING DATA - compute the average losses over runs
+    avg_train_loss = np.zeros([2,2])
+
+    # Total L2 model - L2 losses and Linf losses
+    total_L2model_L2_loss = np.sum(train_loss[:, 0, 0]) 
+    total_L2model_Linf_loss = np.sum(train_loss[:, 0, 1]) 
+
+    # Total Linf model - L2 losses and Linf losses
+    total_Linfmodel_L2_loss = np.sum(train_loss[:, 1, 0]) 
+    total_Linfmodel_Linf_loss = np.sum(train_loss[:, 1, 1]) 
+    
+    avg_train_loss[0][0] = total_L2model_L2_loss / n_runs
+    avg_train_loss[0][1] = total_L2model_Linf_loss / n_runs   
+    avg_train_loss[1][0] = total_Linfmodel_L2_loss / n_runs
+    avg_train_loss[1][1] = total_Linfmodel_Linf_loss / n_runs 
+    
+    # TEST DATA - compute the average losses over runs
+    avg_test_loss = np.zeros([2,2])
+    
+    # Total L2model L2 losses and Linf losses
+    total_L2model_L2_loss = np.sum(test_loss[:, 0, 0]) 
+    total_L2model_Linf_loss = np.sum(test_loss[:, 0, 1]) 
+
+    # Total Linf Model L2 losses and Linf losses
+    total_Linfmodel_L2_loss = np.sum(test_loss[:, 1, 0]) 
+    total_Linfmodel_Linf_loss = np.sum(test_loss[:, 1, 1]) 
+    
+    avg_test_loss[0][0] = total_L2model_L2_loss / n_runs
+    avg_test_loss[0][1] = total_L2model_Linf_loss / n_runs
+    avg_test_loss[1][0] = total_Linfmodel_L2_loss / n_runs
+    avg_test_loss[1][1] = total_Linfmodel_Linf_loss / n_runs
+
+
     # TODO: return a 2-by-2 training loss variable and a 2-by-2 test loss variable
         
 
