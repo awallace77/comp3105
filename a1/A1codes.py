@@ -120,10 +120,8 @@ def avg_L2_Linf_loss(loss, n_runs):
     Output: A 2x2 matrix of average traning losses and a 2x2 matrix of average test losses for L2 & Linf models and L2 & Linf losses
 '''
 def synRegExperiments():
-    def genData(n_points, is_training=False):
-        '''
-        This function generate synthetic data
-        '''
+
+    def genRealData(n_points, is_training=False):
         X = []
         # Trying with regression training data
         try:
@@ -140,11 +138,17 @@ def synRegExperiments():
         X = np.concatenate((np.ones((X.shape[0], 1)), X), axis=1) # augment input
         X = np.delete(X, X.shape[1] - 1, 1)
 
-        # X = np.random.randn(n_points, d) # input matrix
-        # X = np.concatenate((np.ones((n_points, 1)), X), axis=1) # augment input
-        # y = X @ w_true + np.random.randn(n_points, 1) * noise # ground truth label
-        # if is_training:
-        #     y[0] *= -0.1
+        return X, y
+
+    def genData(n_points, is_training=False):
+        '''
+        This function generate synthetic data
+        '''
+        X = np.random.randn(n_points, d) # input matrix
+        X = np.concatenate((np.ones((n_points, 1)), X), axis=1) # augment input
+        y = X @ w_true + np.random.randn(n_points, 1) * noise # ground truth label
+        if is_training:
+            y[0] *= -0.1
 
         return X, y
 
@@ -162,8 +166,12 @@ def synRegExperiments():
         w_true = np.random.randn(d + 1, 1)
         Xtrain, ytrain = genData(n_train, is_training=True)
         Xtest, ytest = genData(n_test, is_training=False)
+
+        # For data from regression_train.csv and regression_test.csv
+        # Xtrain, ytrain = genRealData(n_train, is_training=True)
+        # Xtest, ytest = genRealData(n_test, is_training=False)
+
         w_L2 = minimizeL2(Xtrain, ytrain)
-        print(w_L2)
         w_Linf = minimizeLinf(Xtrain, ytrain)
 
         # TRAINING DATA: Evaluate the two models' performance (for each model,
