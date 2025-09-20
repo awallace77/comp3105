@@ -1,6 +1,7 @@
 
 import numpy as np
 from cvxopt import matrix, solvers
+import pandas as pd
 
 def hello_world():
     print("Hello world")
@@ -170,3 +171,64 @@ if __name__ == "__main__":
     # y = np.array([1, 2, 3])
     # minimizeLinf(X, y)
     synRegExperiments()
+
+def preprocessCCS(dataset_folder):
+    filepath = os.path.join(dataset_folder,"Concrete_Data.xls")
+    file = pd.read_excel(filepath,skiprows=1)
+    X = file.iloc[:,:-1].to_numpy(dtype=float) #all columns except for last
+    y = file.iloc[:,-1:].to_numpy(dtype=float).reshape(-1,1) # only the last column
+
+    return X,y
+
+def runCCS(dataset_folder):
+    X, y = preprocessCCS(dataset_folder)
+    n, d = X.shape
+    X = np.concatenate((np.ones((n, 1)), X), axis=1)
+    n_runs = 100
+    train_loss = np.zeros([n_runs, 2, 2]) # n_runs * n_models * n_metrics
+    test_loss = np.zeros([n_runs, 2, 2]) # n_runs * n_models * n_metrics
+
+    # TODO: Change the following random seed to one of your student IDs
+    np.random.seed(101260693)
+    for r in range(n_runs):
+    # DONE: Randomly partition the dataset into two parts (50%
+    # training and 50% test)
+        n = X.shape[0]
+        
+        permed = np.random.permutation(n) # returns a random reorder of the number of data points
+
+        split = n//2 #split at the half way 
+
+        idx_fh = permed[:split]#this includes everything before the split
+        idx_sh = permed[split:]#this includes everything after the split
+
+        Xfh, yfh = X[idx_fh], y[idx_fh]
+        Xsh, ysh = X[idx_sh], y[idx_sh]
+
+
+
+
+
+    # TODO: Learn two different models from the training data
+    # using L2 and L infinity losses
+
+        modell2 = minimizeL2(Xfh,yfh)
+        modellinf = minimizeLinf(Xfh,yfh)
+
+    # TODO: Evaluate the two models' performance (for each model,
+    # calculate the L2 and L infinity losses on the training
+    # data). Save them to `train_loss`
+
+
+
+    # TODO: Evaluate the two models' performance (for each model,
+    # calculate the L2 and L infinity losses on the test
+    # data). Save them to `test_loss`
+    # TODO: compute the average losses over runs
+    # TODO: return a 2-by-2 training loss variable and a 2-by-2 test loss variable
+        
+
+
+    
+
+    
