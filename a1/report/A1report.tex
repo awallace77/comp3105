@@ -122,7 +122,7 @@ Andrew Wallace - 101210291\\
       Recall the first constraint: $-\delta \le 0$ \\
       We want
       \begin{center}
-        $\underset{1 \times (d + 1)}{G^{(1)}} \cdot \mathbf{u} \preceq \underset{n \times 1}{\mathbf{h}^{(1)}}$ \\
+        $\underset{1 \times (d + 1)}{G^{(1)}} \cdot \mathbf{u} \preceq \underset{1 \times 1}{\mathbf{h}^{(1)}}$ \\
       \end{center}
       We will now map our constraint into this form.
       \begin{center}
@@ -134,7 +134,7 @@ Andrew Wallace - 101210291\\
           \delta
         \end{bmatrix} \preceq 
         \underset{n \times 1}{\mathbf{h}^{(1)}} \iff -\delta \le 0$ \\
-        $\underset{1 \times d}{G^{(11)}} \cdot \mathbf{w} + \underset{1 \times 1}{G^{(12)}} \cdot \delta = -\delta \le 0 = \underset{n \times 1}{\mathbf{h}^{(1)}}$ \\
+        $\underset{1 \times d}{G^{(11)}} \cdot \mathbf{w} + \underset{1 \times 1}{G^{(12)}} \cdot \delta = -\delta \le 0 = \underset{1 \times 1}{\mathbf{h}^{(1)}}$ \\
       \end{center}
       So, \\
       $\underset{1 \times d}{G^{(11)}} = \mathbf{0}_{1 \times d}$ \\
@@ -143,7 +143,7 @@ Andrew Wallace - 101210291\\
       \begin{bmatrix}
         \mathbf{0}_{1 \times d} & -1 
       \end{bmatrix}$ \\
-      $\underset{n \times 1}{\mathbf{h}^{(1)}} = \mathbf{1}_{n \times 1}$
+      $\underset{1 \times 1}{\mathbf{h}^{(1)}} = \mathbf{0}_{1 \times 1}$
       \item (0.25\%) We want $G^{(2)}\mathbf{u} \preceq \mathbf{h}^{(2)} \iff X \mathbf{w} - \mathbf{y} \preceq \delta \cdot \mathbf{1_n}.$ What should $G^{(2)} \in \mathbb{R}^{n \times (d+1)}$ and $h^{(2)} \in \mathbb{R}^n$ be? \\
       Recall our second constraint is \\
       $X \mathbf{w} - \mathbf{y} \preceq \delta \cdot \mathbf{1}_n \iff X \mathbf{w} - \delta \cdot \mathbf{1}_n \preceq \mathbf{y}$ \\
@@ -217,8 +217,8 @@ Andrew Wallace - 101210291\\
       \end{bmatrix} \in \mathbb{R}^{d+1}$ \\[0.5em]
       $G = \begin{bmatrix}
         \mathbf{0}_{1 \times d} & -1 \\
-        X & -\mathbf{-1}_n
-        -X & -\mathbf{-1}_n
+        X & -\mathbf{1}_n \\
+        -X & -\mathbf{1}_n
       \end{bmatrix} \in \mathbb{R}^{(2n+1) \times (d+1)}$ \\[0.5em]
       $\mathbf{h} = \begin{bmatrix}
         0 \\
