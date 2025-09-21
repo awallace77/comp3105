@@ -203,7 +203,7 @@ if __name__ == "__main__":
 
 def preprocessCCS(dataset_folder):
     filepath = os.path.join(dataset_folder,"Concrete_Data.xls")
-    file = pd.read_excel(filepath,skiprows=1)
+    file = pd.read_excel(filepath)
     X = file.iloc[:,:-1].to_numpy(dtype=float) #all columns except for last
     y = file.iloc[:,-1:].to_numpy(dtype=float).reshape(-1,1) # only the last column
 
@@ -309,7 +309,9 @@ def runCCS(dataset_folder):
     avg_test_loss[1][1] = total_Linfmodel_Linf_loss / n_runs
 
 
-    # TODO: return a 2-by-2 training loss variable and a 2-by-2 test loss variable
+    # Done: return a 2-by-2 training loss variable and a 2-by-2 test loss variable
+
+    return avg_train_loss, avg_test_loss
         
 
 
