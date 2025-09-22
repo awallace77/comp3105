@@ -1,21 +1,29 @@
 
 import numpy as np
 from cvxopt import matrix, solvers
+import autograd as ag
+import autograd.numpy as agnp
+from scipy.optimize import minimize
 
+
+
+''' QUESTION 1 ************************************************'''
 '''
-    L2_loss
+    L2_loss 
+    Computes the avg loss accross n data points
     Input X: a nxd matrix of inputs
     Input w: a dx1 vector of weights
     Input y: a nx1 vector of targets
     Output: the computed L2 loss
 '''
-def L2_loss(X, w, y):
+def L2_loss(w, X, y):
     # 1/2n (Xw - y)^2
     return (1/2) * np.mean(((X @ w) - y) ** 2)
 
 
 '''
-    Linf_loss
+    Linf_loss 
+    Computes the max loss accross n data points
     Input X: a nxd matrix of inputs
     Input w: a dx1 vector of weights
     Input y: a nx1 vector of targets
@@ -85,10 +93,10 @@ def minimizeLinf(X, y):
     Ouput: the updated loss matrix
 '''
 def evaluate_L2_Linf(loss, run, X, w_L2, w_Linf, y):
-    loss[run][0][0] = L2_loss(X, w_L2, y) 
-    loss[run][0][1] = Linf_loss(X, w_L2, y)
-    loss[run][1][0] = L2_loss(X, w_Linf, y)
-    loss[run][1][1] = Linf_loss(X, w_Linf, y) 
+    loss[run][0][0] = L2_loss(w_L2, X, y) 
+    loss[run][0][1] = Linf_loss(w_L2, X, y)
+    loss[run][1][0] = L2_loss(w_Linf, X, y)
+    loss[run][1][1] = Linf_loss(w_Linf, X, y) 
 
 '''
     avg_L2_Linf_loss
@@ -186,15 +194,93 @@ def synRegExperiments():
 
     # TRAINING DATA - compute the average losses over runs
     avg_train_loss = avg_L2_Linf_loss(train_loss, n_runs)
-    print(avg_train_loss)
     
     # TEST DATA - compute the average losses over runs
     avg_test_loss = avg_L2_Linf_loss(test_loss, n_runs)
-    print(avg_test_loss)
     
     # Return a 2-by-2 training loss variable and a 2-by-2 test loss variable
     return avg_train_loss, avg_test_loss
 
 
+''' QUESTION 2 ************************************************'''
+'''
+    linearRegL2Obj
+    Input w: dx1 vector of parameters w
+    Input X: nxd matrix 
+    Input y: nx1 vector
+    Ouput: A scalar value that is the objective value of 1/2n ||Xw - y||_{2}^{2}
+'''
+def linearReg2Obj(w, X, y):
+    n, _ = X.shape
+    obj_value = (1 / 2*n) * (((X @ w - y).T) @ (X @ w - y))[0][0]
+    return obj_value
+
+'''
+    linearRegL2Grad
+    Input w: dx1 vector of parameters w
+    Input X: nxd matrix 
+    Input y: nx1 vector
+    Ouput: A vecotr gradient that is the analytic form gradient of size dx1
+'''
+def linearReg2Grad(w, X, y):
+    n, _ = X.shape
+    obj_gradient = (1/n) * X.T @ (X @ w - y)
+    return obj_gradient
+
+'''
+    find_opt
+    Finds the optimal solution of a convex optimization problem using the minimize from scipy.optimize
+    Input obj_func: An objective function
+    Input grad_func: The gradient of objective function 
+    Input X: nxd input matrix
+    Input y: nx1 label vector
+    Output: An dx1 parameter vector w
+'''
+def find_opt(obj_func, grad_func, X, y):
+    d = X.shape[1]
+    w_0 = np.random.rand(d)
+    
+    def func(w):
+        w = w[:, None]
+        obj_value = obj_func(w, X, y)
+        return obj_value 
+    
+    def gd(w):
+        w = w[:, None]
+        grad = grad_func(w, X, y)[:, 0] # turn back into 1-d array
+        return grad
+
+    return minimize(func, w_0, jac=gd)['x'][:, None]
+
 if __name__ == "__main__":
-    synRegExperiments()
+
+    # Question 1a ****************************************************
+    # Please use a1testbed.py
+
+    # Question 1b ****************************************************
+    # Please see A1report.pdf
+    
+    # Question 1c ****************************************************
+    # synRegExperiments()
+
+    
+    # Question 2a.1 ****************************************************
+    # Analytic gradient
+    X = agnp.random.randn(100, 3)              # n=100 samples, d=3 features
+    w = agnp.random.randn(3).reshape(3, 1)     # parameter vector w (d,)
+    y = agnp.random.randn(100).reshape(100, 1) # target vector (n,)
+    
+    # Gradient w.r.t. w
+    grad_L2 = ag.grad(L2_loss)  # autograd automatically computes ∂L/∂w
+    gradient = grad_L2(w, X, y)
+
+    # Compare the gradients between autograd and our implementation
+    print(gradient)
+    print(linearReg2Grad(w, X, y))
+
+    # Question 2a.2 ****************************************************
+    w = find_opt(linearReg2Obj, linearReg2Grad, X, y)
+    w_analytic = minimizeL2(X, y)
+    print(f"via scipy.optimize minimize: \n {w}")
+    print(f"via minimizeL2: \n {w_analytic}")
+
