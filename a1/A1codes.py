@@ -252,6 +252,55 @@ def find_opt(obj_func, grad_func, X, y):
 
     return minimize(func, w_0, jac=gd)['x'][:, None]
 
+'''
+    synClsExperiments
+    Output: 4x3 matrix train_acc of average training accuracies and a 4x3 matrix test_acc of average test accuracies
+'''
+def synClsExperiments():
+    def genData(n_points, dim1, dim2):
+        '''
+        This function generate synthetic data
+        '''
+        c0 = np.ones([1, dim1]) # class 0 center
+        c1 = -np.ones([1, dim1]) # class 1 center
+        X0 = np.random.randn(n_points, dim1 + dim2) # class 0 input
+        X0[:, :dim1] += c0
+        X1 = np.random.randn(n_points, dim1 + dim2) # class 1 input
+        X1[:, :dim1] += c1
+        X = np.concatenate((X0, X1), axis=0)
+        X = np.concatenate((np.ones((2 * n_points, 1)), X), axis=1) # augmentation
+        y = np.concatenate([np.zeros([n_points, 1]), np.ones([n_points, 1])], axis=0)
+        return X, y
+
+    def runClsExp(m=100, dim1=2, dim2=2):
+        '''
+        Run classification experiment with the specified arguments
+        '''
+        n_test = 1000
+        Xtrain, ytrain = genData(m, dim1, dim2)
+        Xtest, ytest = genData(n_test, dim1, dim2)
+        w_logit = find_opt(logisticRegObj, logisticRegGrad, Xtrain, ytrain)
+        ytrain_hat = np.where(Xtrain @ w_logit >= 0, 1, 0) # DONE: Compute predicted labels of the training points
+        train_acc = 1 - np.mean(np.where(ytrain_hat - ytrain != 0, 1, 0)) # DONE: Compute the accuarcy of the training set (1 - missclasification rate (L_0 = 1(y_hat != y) = 0 if y_hat = y, 0 otherwise))
+        ytest_hat = np.where(Xtest @ w_logit >= 0, 1, 0) # DONE: Compute predicted labels of the test points
+        test_acc = 1 - np.mean(np.where(ytest_hat- ytest != 0, 1, 0)) # DONE: Compute the accuarcy of the test set
+        return train_acc, test_acc
+
+    n_runs = 100
+    train_acc = np.zeros([n_runs, 4, 3])
+    test_acc = np.zeros([n_runs, 4, 3])
+    # TODO: Change the following random seed to one of your student IDs
+    np.random.seed(101210291)
+    for r in range(n_runs):
+        for i, m in enumerate((10, 50, 100, 200)):
+            train_acc[r, i, 0], test_acc[r, i, 0] = runClsExp(m=m)
+        for i, dim1 in enumerate((1, 2, 4, 8)):
+            train_acc[r, i, 1], test_acc[r, i, 1] = runClsExp(dim1=dim1)
+        for i, dim2 in enumerate((1, 2, 4, 8)):
+            train_acc[r, i, 2], test_acc[r, i, 2] = runClsExp(dim2=dim2)
+    # TODO: compute the average accuracies over runs
+    # TODO: return a 4-by-3 training accuracy variable and a 4-by-3 test accuracy variable
+
 if __name__ == "__main__":
 
     # Question 1a ****************************************************
@@ -271,6 +320,9 @@ if __name__ == "__main__":
     y = agnp.random.randn(100).reshape(100, 1) # target vector (n,)
     
     # Gradient w.r.t. w
+    def L2_loss(w, X, y):
+        return (1/2) * agnp.mean(((X @ w) - y) ** 2)
+
     grad_L2 = ag.grad(L2_loss)  # autograd automatically computes ∂L/∂w
     gradient = grad_L2(w, X, y)
 
@@ -283,4 +335,13 @@ if __name__ == "__main__":
     w_analytic = minimizeL2(X, y)
     print(f"via scipy.optimize minimize: \n {w}")
     print(f"via minimizeL2: \n {w_analytic}")
+
+    v = np.array([
+        [3],
+        [-1],
+        [4],
+    ])
+
+    [print(np.where(v >= 0, 1, 0))]
+
 
