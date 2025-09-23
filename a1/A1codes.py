@@ -314,6 +314,24 @@ def runCCS(dataset_folder):
     return avg_train_loss, avg_test_loss
         
 
+def sigmoid(z):
+    return 1 / (1 + np.exp(-z))
+
+def logisticRegObj(w, X, y):
+    n, d = X.shape
+    #return np.linalg.inv(X.T @ X) @ (X.T @ y)
+    z = (1/n) * (-y.T @ np.log(sigmoid(X@w)) - (1-y).T @ np.log(1-sigmoid(X@w)))
+    return z.item()
+
+
+def logisticRegGrad(w, X, y):
+    n, d = X.shape
+    #(1/n)X.T(sigmoid(Xw)-y)
+    z = (1/n)*(X.T @ (sigmoid(X@w)-y))
+    return z
+
+    
+
 
     
 
