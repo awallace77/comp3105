@@ -3,21 +3,30 @@ import numpy as np
 from cvxopt import matrix, solvers
 import pandas as pd
 import os
+import autograd as ag
+import autograd.numpy as agnp
+from scipy.optimize import minimize
 
+
+
+
+''' QUESTION 1 ************************************************'''
 '''
-    L2_loss
+    L2_loss 
+    Computes the avg loss accross n data points
     Input X: a nxd matrix of inputs
     Input w: a dx1 vector of weights
     Input y: a nx1 vector of targets
     Output: the computed L2 loss
 '''
-def L2_loss(X, w, y):
+def L2_loss(w, X, y):
     # 1/2n (Xw - y)^2
     return (1/2) * np.mean(((X @ w) - y) ** 2)
 
 
 '''
-    Linf_loss
+    Linf_loss 
+    Computes the max loss accross n data points
     Input X: a nxd matrix of inputs
     Input w: a dx1 vector of weights
     Input y: a nx1 vector of targets
@@ -87,10 +96,10 @@ def minimizeLinf(X, y):
     Ouput: the updated loss matrix
 '''
 def evaluate_L2_Linf(loss, run, X, w_L2, w_Linf, y):
-    loss[run][0][0] = L2_loss(X, w_L2, y) 
-    loss[run][0][1] = Linf_loss(X, w_L2, y)
-    loss[run][1][0] = L2_loss(X, w_Linf, y)
-    loss[run][1][1] = Linf_loss(X, w_Linf, y) 
+    loss[run][0][0] = L2_loss(w_L2, X, y) 
+    loss[run][0][1] = Linf_loss(w_L2, X, y)
+    loss[run][1][0] = L2_loss(w_Linf, X, y)
+    loss[run][1][1] = Linf_loss(w_Linf, X, y) 
 
 '''
     avg_L2_Linf_loss
@@ -188,18 +197,112 @@ def synRegExperiments():
 
     # TRAINING DATA - compute the average losses over runs
     avg_train_loss = avg_L2_Linf_loss(train_loss, n_runs)
-    print(avg_train_loss)
     
     # TEST DATA - compute the average losses over runs
     avg_test_loss = avg_L2_Linf_loss(test_loss, n_runs)
-    print(avg_test_loss)
     
     # Return a 2-by-2 training loss variable and a 2-by-2 test loss variable
     return avg_train_loss, avg_test_loss
 
 
-if __name__ == "__main__":
-    synRegExperiments()
+''' QUESTION 2 ************************************************'''
+'''
+    linearRegL2Obj
+    Input w: dx1 vector of parameters w
+    Input X: nxd matrix 
+    Input y: nx1 vector
+    Ouput: A scalar value that is the objective value of 1/2n ||Xw - y||_{2}^{2}
+'''
+def linearReg2Obj(w, X, y):
+    n, _ = X.shape
+    obj_value = (1 / 2*n) * (((X @ w - y).T) @ (X @ w - y))[0][0]
+    return obj_value
+
+'''
+    linearRegL2Grad
+    Input w: dx1 vector of parameters w
+    Input X: nxd matrix 
+    Input y: nx1 vector
+    Ouput: A vecotr gradient that is the analytic form gradient of size dx1
+'''
+def linearReg2Grad(w, X, y):
+    n, _ = X.shape
+    obj_gradient = (1/n) * X.T @ (X @ w - y)
+    return obj_gradient
+
+'''
+    find_opt
+    Finds the optimal solution of a convex optimization problem using the minimize from scipy.optimize
+    Input obj_func: An objective function
+    Input grad_func: The gradient of objective function 
+    Input X: nxd input matrix
+    Input y: nx1 label vector
+    Output: An dx1 parameter vector w
+'''
+def find_opt(obj_func, grad_func, X, y):
+    d = X.shape[1]
+    w_0 = np.random.rand(d)
+    
+    def func(w):
+        w = w[:, None]
+        obj_value = obj_func(w, X, y)
+        return obj_value 
+    
+    def gd(w):
+        w = w[:, None]
+        grad = grad_func(w, X, y)[:, 0] # turn back into 1-d array
+        return grad
+
+    return minimize(func, w_0, jac=gd)['x'][:, None]
+
+'''
+    synClsExperiments
+    Output: 4x3 matrix train_acc of average training accuracies and a 4x3 matrix test_acc of average test accuracies
+'''
+def synClsExperiments():
+    def genData(n_points, dim1, dim2):
+        '''
+        This function generate synthetic data
+        '''
+        c0 = np.ones([1, dim1]) # class 0 center
+        c1 = -np.ones([1, dim1]) # class 1 center
+        X0 = np.random.randn(n_points, dim1 + dim2) # class 0 input
+        X0[:, :dim1] += c0
+        X1 = np.random.randn(n_points, dim1 + dim2) # class 1 input
+        X1[:, :dim1] += c1
+        X = np.concatenate((X0, X1), axis=0)
+        X = np.concatenate((np.ones((2 * n_points, 1)), X), axis=1) # augmentation
+        y = np.concatenate([np.zeros([n_points, 1]), np.ones([n_points, 1])], axis=0)
+        return X, y
+
+    def runClsExp(m=100, dim1=2, dim2=2):
+        '''
+        Run classification experiment with the specified arguments
+        '''
+        n_test = 1000
+        Xtrain, ytrain = genData(m, dim1, dim2)
+        Xtest, ytest = genData(n_test, dim1, dim2)
+        w_logit = find_opt(logisticRegObj, logisticRegGrad, Xtrain, ytrain)
+        ytrain_hat = np.where(Xtrain @ w_logit >= 0, 1, 0) # DONE: Compute predicted labels of the training points
+        train_acc = 1 - np.mean(np.where(ytrain_hat - ytrain != 0, 1, 0)) # DONE: Compute the accuarcy of the training set (1 - missclasification rate (L_0 = 1(y_hat != y) = 0 if y_hat = y, 0 otherwise))
+        ytest_hat = np.where(Xtest @ w_logit >= 0, 1, 0) # DONE: Compute predicted labels of the test points
+        test_acc = 1 - np.mean(np.where(ytest_hat- ytest != 0, 1, 0)) # DONE: Compute the accuarcy of the test set
+        return train_acc, test_acc
+
+    n_runs = 100
+    train_acc = np.zeros([n_runs, 4, 3])
+    test_acc = np.zeros([n_runs, 4, 3])
+    # TODO: Change the following random seed to one of your student IDs
+    np.random.seed(101210291)
+    for r in range(n_runs):
+        for i, m in enumerate((10, 50, 100, 200)):
+            train_acc[r, i, 0], test_acc[r, i, 0] = runClsExp(m=m)
+        for i, dim1 in enumerate((1, 2, 4, 8)):
+            train_acc[r, i, 1], test_acc[r, i, 1] = runClsExp(dim1=dim1)
+        for i, dim2 in enumerate((1, 2, 4, 8)):
+            train_acc[r, i, 2], test_acc[r, i, 2] = runClsExp(dim2=dim2)
+    # TODO: compute the average accuracies over runs
+    # TODO: return a 4-by-3 training accuracy variable and a 4-by-3 test accuracy variable
 
 def preprocessCCS(dataset_folder):
     filepath = os.path.join(dataset_folder,"Concrete_Data.xls")
@@ -335,4 +438,48 @@ def logisticRegGrad(w, X, y):
 
     
 
+    
+if __name__ == "__main__":
+    synRegExperiments()
+
+    # Question 1a ****************************************************
+    # Please use a1testbed.py
+
+    # Question 1b ****************************************************
+    # Please see A1report.pdf
+    
+    # Question 1c ****************************************************
+    # synRegExperiments()
+
+    
+    # Question 2a.1 ****************************************************
+    # Analytic gradient
+    X = agnp.random.randn(100, 3)              # n=100 samples, d=3 features
+    w = agnp.random.randn(3).reshape(3, 1)     # parameter vector w (d,)
+    y = agnp.random.randn(100).reshape(100, 1) # target vector (n,)
+    
+    # Gradient w.r.t. w
+    def L2_loss(w, X, y):
+        return (1/2) * agnp.mean(((X @ w) - y) ** 2)
+
+    grad_L2 = ag.grad(L2_loss)  # autograd automatically computes ∂L/∂w
+    gradient = grad_L2(w, X, y)
+
+    # Compare the gradients between autograd and our implementation
+    print(gradient)
+    print(linearReg2Grad(w, X, y))
+
+    # Question 2a.2 ****************************************************
+    w = find_opt(linearReg2Obj, linearReg2Grad, X, y)
+    w_analytic = minimizeL2(X, y)
+    print(f"via scipy.optimize minimize: \n {w}")
+    print(f"via minimizeL2: \n {w_analytic}")
+
+    v = np.array([
+        [3],
+        [-1],
+        [4],
+    ])
+
+    [print(np.where(v >= 0, 1, 0))]
     
