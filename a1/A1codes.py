@@ -1,9 +1,12 @@
 
 import numpy as np
 from cvxopt import matrix, solvers
+import pandas as pd
+import os
 import autograd as ag
 import autograd.numpy as agnp
 from scipy.optimize import minimize
+
 
 
 
@@ -301,7 +304,143 @@ def synClsExperiments():
     # TODO: compute the average accuracies over runs
     # TODO: return a 4-by-3 training accuracy variable and a 4-by-3 test accuracy variable
 
+def preprocessCCS(dataset_folder):
+    filepath = os.path.join(dataset_folder,"Concrete_Data.xls")
+    file = pd.read_excel(filepath)
+    X = file.iloc[:,:-1].to_numpy(dtype=float) #all columns except for last
+    y = file.iloc[:,-1:].to_numpy(dtype=float).reshape(-1,1) # only the last column
+
+    return X,y
+
+def runCCS(dataset_folder):
+    X, y = preprocessCCS(dataset_folder)
+    n, d = X.shape
+    X = np.concatenate((np.ones((n, 1)), X), axis=1)
+    n_runs = 100
+    train_loss = np.zeros([n_runs, 2, 2]) # n_runs * n_models * n_metrics
+    test_loss = np.zeros([n_runs, 2, 2]) # n_runs * n_models * n_metrics
+
+    # TODO: Change the following random seed to one of your student IDs
+    np.random.seed(101260693)
+    for r in range(n_runs):
+    # DONE: Randomly partition the dataset into two parts (50%
+    # training and 50% test)
+        n = X.shape[0]
+        
+        permed = np.random.permutation(n) # returns a random reorder of the number of data points
+
+        split = n//2 #split at the half way 
+
+        idx_fh = permed[:split]#this includes everything before the split
+        idx_sh = permed[split:]#this includes everything after the split
+
+        Xfh, yfh = X[idx_fh], y[idx_fh]
+        Xsh, ysh = X[idx_sh], y[idx_sh]
+
+
+
+
+
+    # TODO: Learn two different models from the training data
+    # using L2 and L infinity losses
+
+        modell2 = minimizeL2(Xfh,yfh)
+        modellinf = minimizeLinf(Xfh,yfh)
+
+    # Done: Evaluate the two models' performance (for each model,
+    # calculate the L2 and L infinity losses on the training
+    # data). Save them to `train_loss`
+    avg_train_loss = np.zeros([2,2])
+
+    # L2 model
+    L2model_L2_loss = L2_loss(Xfh, modell2, yfh) 
+    L2model_Linf_loss = Linf_loss(Xfh, modell2, yfh)
+    train_loss[r][0][0] = L2model_L2_loss
+    train_loss[r][0][1] = L2model_Linf_loss
+    # L_inf model
+    Linfmodel_L2_loss = L2_loss(Xfh, modellinf, yfh) 
+    Linfmodel_Linf_loss = Linf_loss(Xfh, modellinf, yfh)
+    train_loss[r][1][0] = Linfmodel_L2_loss
+    train_loss[r][1][1] = Linfmodel_Linf_loss
+
+
+    # Done: Evaluate the two models' performance (for each model,
+    # calculate the L2 and L infinity losses on the test
+    # data). Save them to `test_loss`
+    L2model_L2_loss = L2_loss(Xsh, modell2, ysh) 
+    L2model_Linf_loss = Linf_loss(Xsh, modell2, ysh)
+    test_loss[r][0][0] = L2model_L2_loss
+    test_loss[r][0][1] = L2model_Linf_loss
+    # L_inf model
+    Linfmodel_L2_loss = L2_loss(Xsh, modellinf, ysh) 
+    Linfmodel_Linf_loss = Linf_loss(Xsh, modellinf, ysh)
+    test_loss[r][1][0] = Linfmodel_L2_loss
+    test_loss[r][1][1] = Linfmodel_Linf_loss
+
+    # TODO: compute the average losses over runs
+
+    # TRAINING DATA - compute the average losses over runs
+    avg_train_loss = np.zeros([2,2])
+
+    # Total L2 model - L2 losses and Linf losses
+    total_L2model_L2_loss = np.sum(train_loss[:, 0, 0]) 
+    total_L2model_Linf_loss = np.sum(train_loss[:, 0, 1]) 
+
+    # Total Linf model - L2 losses and Linf losses
+    total_Linfmodel_L2_loss = np.sum(train_loss[:, 1, 0]) 
+    total_Linfmodel_Linf_loss = np.sum(train_loss[:, 1, 1]) 
+    
+    avg_train_loss[0][0] = total_L2model_L2_loss / n_runs
+    avg_train_loss[0][1] = total_L2model_Linf_loss / n_runs   
+    avg_train_loss[1][0] = total_Linfmodel_L2_loss / n_runs
+    avg_train_loss[1][1] = total_Linfmodel_Linf_loss / n_runs 
+    
+    # TEST DATA - compute the average losses over runs
+    avg_test_loss = np.zeros([2,2])
+    
+    # Total L2model L2 losses and Linf losses
+    total_L2model_L2_loss = np.sum(test_loss[:, 0, 0]) 
+    total_L2model_Linf_loss = np.sum(test_loss[:, 0, 1]) 
+
+    # Total Linf Model L2 losses and Linf losses
+    total_Linfmodel_L2_loss = np.sum(test_loss[:, 1, 0]) 
+    total_Linfmodel_Linf_loss = np.sum(test_loss[:, 1, 1]) 
+    
+    avg_test_loss[0][0] = total_L2model_L2_loss / n_runs
+    avg_test_loss[0][1] = total_L2model_Linf_loss / n_runs
+    avg_test_loss[1][0] = total_Linfmodel_L2_loss / n_runs
+    avg_test_loss[1][1] = total_Linfmodel_Linf_loss / n_runs
+
+
+    # Done: return a 2-by-2 training loss variable and a 2-by-2 test loss variable
+
+    return avg_train_loss, avg_test_loss
+        
+
+def sigmoid(z):
+    return 1 / (1 + np.exp(-z))
+
+def logisticRegObj(w, X, y):
+    n, d = X.shape
+    #return np.linalg.inv(X.T @ X) @ (X.T @ y)
+    z = (1/n) * (-y.T @ np.log(sigmoid(X@w)) - (1-y).T @ np.log(1-sigmoid(X@w)))
+    return z.item()
+
+
+def logisticRegGrad(w, X, y):
+    n, d = X.shape
+    #(1/n)X.T(sigmoid(Xw)-y)
+    z = (1/n)*(X.T @ (sigmoid(X@w)-y))
+    return z
+
+    
+
+
+    
+
+    
 if __name__ == "__main__":
+    synRegExperiments()
 
     # Question 1a ****************************************************
     # Please use a1testbed.py
@@ -343,5 +482,4 @@ if __name__ == "__main__":
     ])
 
     [print(np.where(v >= 0, 1, 0))]
-
-
+    
