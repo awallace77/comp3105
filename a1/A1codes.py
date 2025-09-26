@@ -260,35 +260,35 @@ def runCCS(dataset_folder):
         modell2 = minimizeL2(Xfh,yfh)
         modellinf = minimizeLinf(Xfh,yfh)
 
-    # Evaluate the two models' performance (for each model,
-    # calculate the L2 and L infinity losses on the training
-    # data). Save them to `train_loss`
-    avg_train_loss = np.zeros([2,2])
+        # Evaluate the two models' performance (for each model,
+        # calculate the L2 and L infinity losses on the training
+        # data). Save them to `train_loss`
+        avg_train_loss = np.zeros([2,2])
 
-    # L2 model
-    L2model_L2_loss = L2_loss(Xfh, modell2, yfh) 
-    L2model_Linf_loss = Linf_loss(Xfh, modell2, yfh)
-    train_loss[r][0][0] = L2model_L2_loss
-    train_loss[r][0][1] = L2model_Linf_loss
-    # L_inf model
-    Linfmodel_L2_loss = L2_loss(Xfh, modellinf, yfh) 
-    Linfmodel_Linf_loss = Linf_loss(Xfh, modellinf, yfh)
-    train_loss[r][1][0] = Linfmodel_L2_loss
-    train_loss[r][1][1] = Linfmodel_Linf_loss
+        # L2 model
+        L2model_L2_loss = L2_loss(Xfh, modell2, yfh) 
+        L2model_Linf_loss = Linf_loss(Xfh, modell2, yfh)
+        train_loss[r][0][0] = L2model_L2_loss
+        train_loss[r][0][1] = L2model_Linf_loss
+        # L_inf model
+        Linfmodel_L2_loss = L2_loss(Xfh, modellinf, yfh) 
+        Linfmodel_Linf_loss = Linf_loss(Xfh, modellinf, yfh)
+        train_loss[r][1][0] = Linfmodel_L2_loss
+        train_loss[r][1][1] = Linfmodel_Linf_loss
 
 
-    # Done: Evaluate the two models' performance (for each model,
-    # calculate the L2 and L infinity losses on the test
-    # data). Save them to `test_loss`
-    L2model_L2_loss = L2_loss(Xsh, modell2, ysh) 
-    L2model_Linf_loss = Linf_loss(Xsh, modell2, ysh)
-    test_loss[r][0][0] = L2model_L2_loss
-    test_loss[r][0][1] = L2model_Linf_loss
-    # L_inf model
-    Linfmodel_L2_loss = L2_loss(Xsh, modellinf, ysh) 
-    Linfmodel_Linf_loss = Linf_loss(Xsh, modellinf, ysh)
-    test_loss[r][1][0] = Linfmodel_L2_loss
-    test_loss[r][1][1] = Linfmodel_Linf_loss
+        # Done: Evaluate the two models' performance (for each model,
+        # calculate the L2 and L infinity losses on the test
+        # data). Save them to `test_loss`
+        L2model_L2_loss = L2_loss(Xsh, modell2, ysh) 
+        L2model_Linf_loss = Linf_loss(Xsh, modell2, ysh)
+        test_loss[r][0][0] = L2model_L2_loss
+        test_loss[r][0][1] = L2model_Linf_loss
+        # L_inf model
+        Linfmodel_L2_loss = L2_loss(Xsh, modellinf, ysh) 
+        Linfmodel_Linf_loss = Linf_loss(Xsh, modellinf, ysh)
+        test_loss[r][1][0] = Linfmodel_L2_loss
+        test_loss[r][1][1] = Linfmodel_Linf_loss
 
     # compute the average losses over runs
 
@@ -341,7 +341,7 @@ def linearRegL2Obj(w, X, y):
         Ouput: A scalar value that is the objective value of 1/2n ||Xw - y||_{2}^{2}
     """
     n, _ = X.shape
-    obj_value = (1 / 2*n) * (((X @ w - y).T) @ (X @ w - y))[0][0]
+    obj_value = (1 / (2*n)) * (((X @ w - y).T) @ (X @ w - y))[0][0]
     return obj_value
 
 
@@ -394,8 +394,16 @@ def sigmoid(z):
     """
     return 1 / (1 + np.exp(-z))
 
-# TODO: Add DOCSTRING comments
+# Done: Add DOCSTRING comments
 def logisticRegObj(w, X, y):
+    """
+        Calculates the cross-entropy loss for binary logistic regression
+        Parameters:
+            w: a dx1 vector of parameters
+            X: a nxd input matrix
+            y: a nx1 binary label vector with values in {0, 1}
+        Returns: a scalar loss value equal to (1/n) * [sum(log(1 + exp(Xw))) - y^T (Xw)]
+    """
     n, _ = X.shape
     z = X @ w
     loss = (1/n) * (np.sum(np.logaddexp(0, z)) - np.sum(y * z))
@@ -403,16 +411,16 @@ def logisticRegObj(w, X, y):
 
 def logisticRegGrad(w, X, y):
     """
-        Calculates the vector gradient of the cross entropy loss objective function
+        Calculates the gradient of the cross-entropy loss for binary logistic regression.
         Parameters:
-            w: dx1 vector of parameters
-            X: nxd input matrix X
-            y: nx1 label vector 
-        Returns: The vector gradient
+            w: a dx1 vector of parameters
+            X: a nxd input matrix
+            y: a nx1 binary label vector with values in {0, 1}
+        Returns: a dx1 gradient vector equal to (1/n) * X^T (sigmoid(Xw) - y)
     """
-    n, _ = X.shape
-    #(1/n)X.T(sigmoid(Xw)-y)
-    z = (1/n)*(X.T @ (sigmoid((X@w)-y)))
+    n, d = X.shape
+
+    z = (1/n)*(X.T @ (sigmoid(X@w)-y))
     return z
 
 
@@ -509,20 +517,38 @@ def synClsExperiments():
 
 
 #q2d 
-# TODO: Add DOCSTRINGS (function comments) - please reference other commented functions
+# Done: Add DOCSTRINGS (function comments) - please reference other commented functions
 def quad_expand(X):
+    """
+        Expands features by appending element wise sqaured terms.
+        Parameters:
+            X: a nxd input matrix
+        Returns: a n x (2d) matrix formed by concatenating X with X**2 along the last axis
+    """
     return np.concatenate([X, X**2], axis=1)
 
-# TODO: Add DOCSTRINGS (function comments) - please reference other commented functions
+# Done: Add DOCSTRINGS (function comments) - please reference other commented functions
 def preprocessBCW(dataset_folder):
+    """
+        Loads and preprocesses the Breast Cancer Wisconsin dataset.
+        Parameters:
+            dataset_folder: the absolute path of the BCW dataset folder
+        Returns: the preprocessed nxd input matrix X and an nx1 label vector y with values in {0.0, 1.0}
+    """
     filepath = os.path.join(dataset_folder,'wdbc.data')
     file = pd.read_csv(filepath, header=None)
     y = file.iloc[:, 1].map({'B': 0.0, 'M': 1.0}).to_numpy().reshape(-1, 1)
     X = file.iloc[:, 2:].to_numpy(dtype=float)
     return X, y
 
-# TODO: Add DOCSTRINGS (function comments) - please reference other commented functions
+# Done: Add DOCSTRINGS (function comments) - please reference other commented functions
 def runBCW(dataset_folder):
+    """
+        Trains and evaluates logistic regression on the BCW dataset.
+        Parameters:
+            dataset_folder: the absolute path of the BCW dataset folder
+        Returns: the average training accuracy and the average test accuracy over the 100 runs
+    """
     X, y = preprocessBCW(dataset_folder)
     X = quad_expand(X)
     n, d = X.shape
@@ -607,7 +633,14 @@ if __name__ == "__main__":
     
     
     # Question 2b ****************************************************
-    # TODO: Test code for 2b
+    print(f"\nQUESTION 2B: Logistic regression objective and gradient test\n")
+    X = np.random.randn(20, 3)
+    X = np.concatenate((np.ones((20,1)), X), axis=1)
+    y = (np.random.rand(20,1) > 0.5).astype(float)
+
+    w0 = np.random.randn(X.shape[1], 1)
+    print(f"Objective at random w: {logisticRegObj(w0, X, y)}")
+    print(f"Gradient shape: {logisticRegGrad(w0, X, y).shape}\n")
 
 
     # Question 2c: ****************************************************
