@@ -3,60 +3,102 @@ import numpy as np
 from cvxopt import matrix, solvers
 import pandas as pd
 import os
+from scipy.optimize import minimize
 import autograd as ag
 import autograd.numpy as agnp
-from scipy.optimize import minimize
 
+# HELPER FUNCTIONS ***************************************************
 
-
-
-''' QUESTION 1 ************************************************'''
-'''
-    L2_loss 
-    Computes the avg loss accross n data points
-    Input X: a nxd matrix of inputs
-    Input w: a dx1 vector of weights
-    Input y: a nx1 vector of targets
-    Output: the computed L2 loss
-'''
-def L2_loss(w, X, y):
+def L2_loss(X, w, y):
+    """
+        Calculates the L2 loss of given inputs, model, and labels
+        Parameters:
+            X: a nxd matrix of inputs
+            w: a dx1 vector of weights
+            y: a nx1 vector of targets
+        Returns: the computed L2 loss
+    """
     # 1/2n (Xw - y)^2
     return (1/2) * np.mean(((X @ w) - y) ** 2)
 
-
-'''
-    Linf_loss 
-    Computes the max loss accross n data points
-    Input X: a nxd matrix of inputs
-    Input w: a dx1 vector of weights
-    Input y: a nx1 vector of targets
-    Output: the computed Linf loss
-'''
 def Linf_loss(X, w, y): 
+    """
+        Calculates the Linf loss for a given inputs, model, and labels
+        Parameters:
+            X: a nxd matrix of inputs
+            w: a dx1 vector of weights
+            y: a nx1 vector of targets
+        Returns: the computed Linf loss
+    """
     # max_{i = 1, ..., n} |x_i^T w - y_i|
     return np.max(np.abs((X @ w) - y))
 
+def evaluate_L2_Linf(loss, run, X, w_L2, w_Linf, y):
+    """
+        Calculates the L2 and Linf losses for a given L2 and Linf model
+        Parameters:
+            loss: the 2x2 loss matrix (by reference)
+            run: the current run (number)
+            w_L2: the L2 model 
+            w_Linf: the Linf model
+            y: the truth vector
+        Returns: the updated loss matrix
+    """
+    loss[run][0][0] = L2_loss(X, w_L2, y) 
+    loss[run][0][1] = Linf_loss(X, w_L2, y)
+    loss[run][1][0] = L2_loss(X, w_Linf, y)
+    loss[run][1][1] = Linf_loss(X, w_Linf, y) 
 
-'''
-    minimizeL2
-    Input X: a nxd matrix 
-    Input y: a nx1 target/label vector
-    Output: dx1 vector of parameters w corresponding to the solution of the L2 losses
-    w = (X.T X)^{-1} X.T y
-'''
+
+def avg_L2_Linf_loss(loss, n_runs):
+    """
+        Calculates the average loss in n runs
+        Parameters:
+            loss: the 2x2 model x loss matrix 
+            n_runs: the total number of runs for your experiment
+        Returns: the averge L2 and Linf loss
+    """
+    avg_loss = np.zeros([2,2])
+
+    # Total L2 model - L2 losses and Linf losses
+    total_L2model_L2_loss = np.sum(loss[:, 0, 0]) 
+    total_L2model_Linf_loss = np.sum(loss[:, 0, 1]) 
+
+    # Total Linf model - L2 losses and Linf losses
+    total_Linfmodel_L2_loss = np.sum(loss[:, 1, 0])
+    total_Linfmodel_Linf_loss = np.sum(loss[:, 1, 1]) 
+    
+    avg_loss[0][0] = total_L2model_L2_loss / n_runs
+    avg_loss[0][1] = total_L2model_Linf_loss / n_runs   
+    avg_loss[1][0] = total_Linfmodel_L2_loss / n_runs
+    avg_loss[1][1] = total_Linfmodel_Linf_loss / n_runs 
+
+    return avg_loss
+
+
+# QUESTION 1 ***************************************************
+
 def minimizeL2(X, y):
+    """
+        Calculates the parameters w corresponding to the solution of the L2 losses
+        Parameters:
+            X: a nxd matrix 
+            y: a nx1 target/label vector
+        Returns: dx1 vector of parameters w corresponding to the solution of the L2 losses
+    """
+    # w = (X.T X)^{-1} X.T y
     return np.linalg.inv(X.T @ X) @ (X.T @ y)
 
-'''
-    minimizeLinf
-    Input X: a nxd matrix 
-    Input y: a nx1 target/label vector
-    Output: dx1 vector of parameters w corresponding to the solution of the L_{\infty} loss
-'''
+
 def minimizeLinf(X, y):
-    '''
-    cvxopt.solvers.lp(c, G, h[, A, b[, solver[, primalstart[, dualstart]]]])
-    '''
+    """
+        Calculates the parameters w corresponding to the solution of the Linf losses
+        Parameters: 
+            X: a nxd matrix 
+            y: a nx1 target/label vector
+        Returns: dx1 vector of parameters w corresponding to the solution of the Linf loss
+    """
+    # cvxopt.solvers.lp(c, G, h[, A, b[, solver[, primalstart[, dualstart]]]])
     
     # nxd dimensions
     n, d = X.shape
@@ -86,53 +128,16 @@ def minimizeLinf(X, y):
     final_sol = np.array(sol['x'])[:-1, :]
     return final_sol
 
-'''
-    evaluate_L2_Linf
-    Input loss: the 2x2 loss matrix (by reference)
-    Input run: the current run (number)
-    Input w_L2: the L2 model 
-    Input w_Linf: the Linf model
-    Input y: the truth vector
-    Ouput: the updated loss matrix
-'''
-def evaluate_L2_Linf(loss, run, X, w_L2, w_Linf, y):
-    loss[run][0][0] = L2_loss(w_L2, X, y) 
-    loss[run][0][1] = Linf_loss(w_L2, X, y)
-    loss[run][1][0] = L2_loss(w_Linf, X, y)
-    loss[run][1][1] = Linf_loss(w_Linf, X, y) 
 
-'''
-    avg_L2_Linf_loss
-    Input loss: the 2x2 model x loss matrix 
-    Input n_runs: the total number of runs for your experiment
-    Output: the averge L2 and Linf loss
-'''
-def avg_L2_Linf_loss(loss, n_runs):
-    avg_loss = np.zeros([2,2])
-
-    # Total L2 model - L2 losses and Linf losses
-    total_L2model_L2_loss = np.sum(loss[:, 0, 0]) 
-    total_L2model_Linf_loss = np.sum(loss[:, 0, 1]) 
-
-    # Total Linf model - L2 losses and Linf losses
-    total_Linfmodel_L2_loss = np.sum(loss[:, 1, 0])
-    total_Linfmodel_Linf_loss = np.sum(loss[:, 1, 1]) 
-    
-    avg_loss[0][0] = total_L2model_L2_loss / n_runs
-    avg_loss[0][1] = total_L2model_Linf_loss / n_runs   
-    avg_loss[1][0] = total_Linfmodel_L2_loss / n_runs
-    avg_loss[1][1] = total_Linfmodel_Linf_loss / n_runs 
-
-    return avg_loss
-
-
-'''
-    synRegExperiments
-    Output: A 2x2 matrix of average traning losses and a 2x2 matrix of average test losses for L2 & Linf models and L2 & Linf losses
-'''
 def synRegExperiments():
-
+    """
+        Calculates the average training and test losses in 100 runs for L2 & Linf models
+        Returns: A 2x2 matrix of average traning losses and a 2x2 matrix of average test losses for L2 & Linf models and L2 & Linf losses
+    """
     def genRealData(n_points, is_training=False):
+        """
+        This function generates real data from regression_train and regression_test csv
+        """
         X = []
         # Trying with regression training data
         try:
@@ -152,9 +157,9 @@ def synRegExperiments():
         return X, y
 
     def genData(n_points, is_training=False):
-        '''
+        """
         This function generate synthetic data
-        '''
+        """
         X = np.random.randn(n_points, d) # input matrix
         X = np.concatenate((np.ones((n_points, 1)), X), axis=1) # augment input
         y = X @ w_true + np.random.randn(n_points, 1) * noise # ground truth label
@@ -171,7 +176,6 @@ def synRegExperiments():
     train_loss = np.zeros([n_runs, 2, 2]) # n_runs * n_models * n_metrics
     test_loss = np.zeros([n_runs, 2, 2]) # n_runs * n_models * n_metrics
     
-    # DONE: Change the following random seed to one of your student IDs
     np.random.seed(101210291)
     for r in range(n_runs):
         w_true = np.random.randn(d + 1, 1)
@@ -204,7 +208,14 @@ def synRegExperiments():
     # Return a 2-by-2 training loss variable and a 2-by-2 test loss variable
     return avg_train_loss, avg_test_loss
 
+
 def preprocessCCS(dataset_folder):
+    """
+        Preprocesses data
+        Parameters:
+            dataset_folder: the absolute path of the CCS dataset folder
+        Returns: the preprocessed nxd input matrix X and an nx1 label vector y
+    """
     filepath = os.path.join(dataset_folder,"Concrete_Data.xls")
     file = pd.read_excel(filepath)
     X = file.iloc[:,:-1].to_numpy(dtype=float) #all columns except for last
@@ -212,7 +223,14 @@ def preprocessCCS(dataset_folder):
 
     return X,y
 
+
 def runCCS(dataset_folder):
+    """
+        Calculates the training and test losses for a given dataset folder
+        Parameters:
+            dataset_folder: the absolute path of the CCS dataset folder
+        Output: the training and test losses
+    """
     X, y = preprocessCCS(dataset_folder)
     n, d = X.shape
     X = np.concatenate((np.ones((n, 1)), X), axis=1)
@@ -220,11 +238,10 @@ def runCCS(dataset_folder):
     train_loss = np.zeros([n_runs, 2, 2]) # n_runs * n_models * n_metrics
     test_loss = np.zeros([n_runs, 2, 2]) # n_runs * n_models * n_metrics
 
-    # TODO: Change the following random seed to one of your student IDs
     np.random.seed(101260693)
     for r in range(n_runs):
-    # DONE: Randomly partition the dataset into two parts (50%
-    # training and 50% test)
+        # Randomly partition the dataset into two parts (50%
+        # training and 50% test)
         n = X.shape[0]
         
         permed = np.random.permutation(n) # returns a random reorder of the number of data points
@@ -237,13 +254,13 @@ def runCCS(dataset_folder):
         Xfh, yfh = X[idx_fh], y[idx_fh]
         Xsh, ysh = X[idx_sh], y[idx_sh]
 
-    # TODO: Learn two different models from the training data
-    # using L2 and L infinity losses
+        # Learn two different models from the training data
+        # using L2 and L infinity losses
 
         modell2 = minimizeL2(Xfh,yfh)
         modellinf = minimizeLinf(Xfh,yfh)
 
-    # Done: Evaluate the two models' performance (for each model,
+    # Evaluate the two models' performance (for each model,
     # calculate the L2 and L infinity losses on the training
     # data). Save them to `train_loss`
     avg_train_loss = np.zeros([2,2])
@@ -273,7 +290,7 @@ def runCCS(dataset_folder):
     test_loss[r][1][0] = Linfmodel_L2_loss
     test_loss[r][1][1] = Linfmodel_Linf_loss
 
-    # TODO: compute the average losses over runs
+    # compute the average losses over runs
 
     # TRAINING DATA - compute the average losses over runs
     avg_train_loss = np.zeros([2,2])
@@ -308,45 +325,50 @@ def runCCS(dataset_folder):
     avg_test_loss[1][1] = total_Linfmodel_Linf_loss / n_runs
 
 
-    # Done: return a 2-by-2 training loss variable and a 2-by-2 test loss variable
+    # return a 2-by-2 training loss variable and a 2-by-2 test loss variable
     return avg_train_loss, avg_test_loss
 
 
-''' QUESTION 2 ************************************************'''
-'''
-    linearRegL2Obj
-    Input w: dx1 vector of parameters w
-    Input X: nxd matrix 
-    Input y: nx1 vector
-    Ouput: A scalar value that is the objective value of 1/2n ||Xw - y||_{2}^{2}
-'''
-def linearReg2Obj(w, X, y):
+""" QUESTION 2 ************************************************************"""
+
+def linearRegL2Obj(w, X, y):
+    """
+        Calculates a scalar objective value
+        Parameters:
+            w: dx1 parameter vector
+            X: nxd input matrix 
+            y: nx1 label vector
+        Ouput: A scalar value that is the objective value of 1/2n ||Xw - y||_{2}^{2}
+    """
     n, _ = X.shape
     obj_value = (1 / 2*n) * (((X @ w - y).T) @ (X @ w - y))[0][0]
     return obj_value
 
-'''
-    linearRegL2Grad
-    Input w: dx1 vector of parameters w
-    Input X: nxd matrix 
-    Input y: nx1 vector
-    Ouput: A vecotr gradient that is the analytic form gradient of size dx1
-'''
-def linearReg2Grad(w, X, y):
+
+def linearRegL2Grad(w, X, y):
+    """
+        Calculates the vector gradient of the L2 objective function
+        Parameters:
+            w: dx1 parameter vector 
+            X: nxd input matrix 
+            y: nx1 label vector
+        Returns: A vector gradient that is the analytic form gradient of size dx1
+    """
     n, _ = X.shape
     obj_gradient = (1/n) * X.T @ (X @ w - y)
     return obj_gradient
 
-'''
-    find_opt
-    Finds the optimal solution of a convex optimization problem using the minimize from scipy.optimize
-    Input obj_func: An objective function
-    Input grad_func: The gradient of objective function 
-    Input X: nxd input matrix
-    Input y: nx1 label vector
-    Output: An dx1 parameter vector w
-'''
+
 def find_opt(obj_func, grad_func, X, y):
+    """
+        Finds the optimal solution of a convex optimization problem using the minimize from scipy.optimize
+        Parameters:
+            obj_func: An objective function
+            grad_func: The gradient of the objective function 
+            X: nxd input matrix
+            y: nx1 label vector
+        Returns: A dx1 parameter vector
+    """
     d = X.shape[1]
     w_0 = np.random.rand(d)
     
@@ -364,30 +386,45 @@ def find_opt(obj_func, grad_func, X, y):
         
 
 def sigmoid(z):
+    """
+        The sigmoid function
+        Parameters:
+            z: the bector to apply the sigmoid function to
+        Returns: the value of apply the sigmoid function to z
+    """
     return 1 / (1 + np.exp(-z))
 
+# TODO: Add DOCSTRING comments
 def logisticRegObj(w, X, y):
-    n, d = X.shape
-    #return np.linalg.inv(X.T @ X) @ (X.T @ y)
-    z = (1/n) * (-y.T @ np.log(sigmoid(X@w)) - (1-y).T @ np.log(1-sigmoid(X@w)))
-    return z.item()
-
+    n, _ = X.shape
+    z = X @ w
+    loss = (1/n) * (np.sum(np.logaddexp(0, z)) - np.sum(y * z))
+    return float(loss)
 
 def logisticRegGrad(w, X, y):
-    n, d = X.shape
+    """
+        Calculates the vector gradient of the cross entropy loss objective function
+        Parameters:
+            w: dx1 vector of parameters
+            X: nxd input matrix X
+            y: nx1 label vector 
+        Returns: The vector gradient
+    """
+    n, _ = X.shape
     #(1/n)X.T(sigmoid(Xw)-y)
-    z = (1/n)*(X.T @ (sigmoid(X@w)-y))
+    z = (1/n)*(X.T @ (sigmoid((X@w)-y)))
     return z
 
-'''
-    synClsExperiments
-    Output: 4x3 matrix train_acc of average training accuracies and a 4x3 matrix test_acc of average test accuracies
-'''
+
 def synClsExperiments():
+    """
+        Calculates the average training accuracies and average test accuracies accross 100 runs
+        Returns: 4x3 matrix train_acc of average training accuracies and a 4x3 matrix test_acc of average test accuracies
+    """
     def genData(n_points, dim1, dim2):
-        '''
+        """
         This function generate synthetic data
-        '''
+        """
         c0 = np.ones([1, dim1]) # class 0 center
         c1 = -np.ones([1, dim1]) # class 1 center
         X0 = np.random.randn(n_points, dim1 + dim2) # class 0 input
@@ -397,26 +434,60 @@ def synClsExperiments():
         X = np.concatenate((X0, X1), axis=0)
         X = np.concatenate((np.ones((2 * n_points, 1)), X), axis=1) # augmentation
         y = np.concatenate([np.zeros([n_points, 1]), np.ones([n_points, 1])], axis=0)
+        return X, y 
+    
+    def genRealData(n_points, is_training=False):
+        """
+        This function generates real data from regression_train and regression_test csv
+        """
+        X = []
+        # Trying with regression training data
+        try:
+            if(is_training):
+                X = np.genfromtxt('a1/toy_data/classification_train.csv', delimiter=',', skip_header=1).astype(float)
+            else: 
+                X = np.genfromtxt('a1/toy_data/classification_test.csv', delimiter=',', skip_header=1).astype(float)
+        except FileNotFoundError:
+            print("Error: file not found. Please create the file or provide the correct path.")
+        except Exception as e:
+            print(f"An error occurred: {e}")
+
+        y = X[:, -1].reshape(X.shape[0], 1)
+        X = np.concatenate((np.ones((X.shape[0], 1)), X), axis=1) # augment input
+        X = np.delete(X, X.shape[1] - 1, 1)
+
         return X, y
 
+
     def runClsExp(m=100, dim1=2, dim2=2):
-        '''
+        """
         Run classification experiment with the specified arguments
-        '''
+        """
         n_test = 1000
-        Xtrain, ytrain = genData(m, dim1, dim2)
-        Xtest, ytest = genData(n_test, dim1, dim2)
+        # Xtrain, ytrain = genData(m, dim1, dim2)
+        # Xtest, ytest = genData(n_test, dim1, dim2)
+
+        # To test w real data from classification_train.csv and classification_test.csv 
+        Xtrain, ytrain = genRealData(m, True)
+        Xtest, ytest = genRealData(m)
+
         w_logit = find_opt(logisticRegObj, logisticRegGrad, Xtrain, ytrain)
-        ytrain_hat = np.where(Xtrain @ w_logit >= 0, 1, 0) # DONE: Compute predicted labels of the training points
-        train_acc = 1 - np.mean(np.where(ytrain_hat - ytrain != 0, 1, 0)) # DONE: Compute the accuarcy of the training set (1 - missclasification rate (L_0 = 1(y_hat != y) = 0 if y_hat = y, 0 otherwise))
-        ytest_hat = np.where(Xtest @ w_logit >= 0, 1, 0) # DONE: Compute predicted labels of the test points
-        test_acc = 1 - np.mean(np.where(ytest_hat- ytest != 0, 1, 0)) # DONE: Compute the accuarcy of the test set
+
+        # Compute predicted labels of the training points
+        ytrain_hat = np.where(Xtrain @ w_logit >= 0, 1, 0) 
+        # Compute the accuarcy of the training set (1 - missclasification rate)
+        train_acc = 1 - np.mean(np.where(ytrain_hat - ytrain != 0, 1, 0)) # 
+
+        # Compute predicted labels of the test points
+        ytest_hat = np.where(Xtest @ w_logit >= 0, 1, 0) 
+        # Compute the accuarcy of the test set
+        test_acc = 1 - np.mean(np.where(ytest_hat - ytest != 0, 1, 0)) 
+
         return train_acc, test_acc
 
     n_runs = 100
     train_acc = np.zeros([n_runs, 4, 3])
     test_acc = np.zeros([n_runs, 4, 3])
-    # DONE: Change the following random seed to one of your student IDs
     np.random.seed(101210291)
     for r in range(n_runs):
         for i, m in enumerate((10, 50, 100, 200)):
@@ -425,12 +496,73 @@ def synClsExperiments():
             train_acc[r, i, 1], test_acc[r, i, 1] = runClsExp(dim1=dim1)
         for i, dim2 in enumerate((1, 2, 4, 8)):
             train_acc[r, i, 2], test_acc[r, i, 2] = runClsExp(dim2=dim2)
-    # TODO: compute the average accuracies over runs
-    # TODO: return a 4-by-3 training accuracy variable and a 4-by-3 test accuracy variable
+    
+    # compute the average accuracies over runs
+    avg_train_acc = np.mean(train_acc, axis=0)
+    avg_test_acc = np.mean(test_acc, axis=0)  
+
+    # ith row(s), jth inner row, kth option (m, dim1, dim2), 
+    # avg = np.mean(train_acc[:,2,0])
+
+    # return a 4-by-3 training accuracy variable and a 4-by-3 test accuracy variable
+    return avg_train_acc, avg_test_acc
+
+
+#q2d 
+# TODO: Add DOCSTRINGS (function comments) - please reference other commented functions
+def quad_expand(X):
+    return np.concatenate([X, X**2], axis=1)
+
+# TODO: Add DOCSTRINGS (function comments) - please reference other commented functions
+def preprocessBCW(dataset_folder):
+    filepath = os.path.join(dataset_folder,'wdbc.data')
+    file = pd.read_csv(filepath, header=None)
+    y = file.iloc[:, 1].map({'B': 0.0, 'M': 1.0}).to_numpy().reshape(-1, 1)
+    X = file.iloc[:, 2:].to_numpy(dtype=float)
+    return X, y
+
+# TODO: Add DOCSTRINGS (function comments) - please reference other commented functions
+def runBCW(dataset_folder):
+    X, y = preprocessBCW(dataset_folder)
+    X = quad_expand(X)
+    n, d = X.shape
+    X = np.concatenate((np.ones((n, 1)), X), axis=1) # augment
+    n_runs = 100
+    train_acc = np.zeros([n_runs])
+    test_acc = np.zeros([n_runs])
+    # Change the following random seed to one of your student IDs
+    np.random.seed(101260693)
+    for r in range(n_runs):
+        # Randomly partition the dataset into two parts (50%
+        # training and 50% test) 
+        n = X.shape[0]
+        permed = np.random.permutation(n)
+        split = n // 2
+        idx_fh = permed[:split]
+        idx_sh = permed[split:]
+
+        Xfh, yfh= X[idx_fh], y[idx_fh]
+        Xsh, ysh = X[idx_sh], y[idx_sh]
+        
+        w = find_opt(logisticRegObj, logisticRegGrad, Xfh, yfh)
+        # Evaluate the model's accuracy on the training
+        # data. Save it to `train_acc` //
+        yhat_train = (sigmoid(Xfh @ w) >= 0.5).astype(float)
+        train_acc[r] = 1.0 - np.mean(yhat_train != yfh)
+        
+        #  Evaluate the model's accuracy on the test
+        # data. Save it to `test_acc`
+        yhat_test  = (sigmoid(Xsh @ w) >= 0.5).astype(float)
+        test_acc[r]  = 1.0 - np.mean(yhat_test  != ysh)
+
+    # compute the average accuracies over runs
+    avg_train_acc = float(np.mean(train_acc))
+    avg_test_acc = float(np.mean(test_acc))
+    # return two variables: the average training accuracy and average test accuracy
+    return avg_train_acc, avg_test_acc
 
 
 if __name__ == "__main__":
-    synRegExperiments()
 
     # Question 1a ****************************************************
     # Please use a1testbed.py
@@ -439,37 +571,49 @@ if __name__ == "__main__":
     # Please see A1report.pdf
     
     # Question 1c ****************************************************
-    # synRegExperiments()
+    print(f"\nQUESTION 1C: Linear regression synthetic experiments\n")
+    train_loss, test_loss = synRegExperiments()
+    print(f"TRAINING: \n{train_loss}\nTESTING:\n{test_loss}")
+    print("\n")
 
     
     # Question 2a.1 ****************************************************
     # Analytic gradient
+    print(f"\nQUESTION 2A.1: Linear regression L2 objective and gradient functions\n")
     X = agnp.random.randn(100, 3)              # n=100 samples, d=3 features
     w = agnp.random.randn(3).reshape(3, 1)     # parameter vector w (d,)
     y = agnp.random.randn(100).reshape(100, 1) # target vector (n,)
     
-    # Gradient w.r.t. w
+    # L2 loss w.r.t. w
     def L2_loss(w, X, y):
         return (1/2) * agnp.mean(((X @ w) - y) ** 2)
 
-    grad_L2 = ag.grad(L2_loss)  # autograd automatically computes ∂L/∂w
+    # autograd automatically computes ∂L/∂w
+    grad_L2 = ag.grad(L2_loss)  
     gradient = grad_L2(w, X, y)
 
     # Compare the gradients between autograd and our implementation
-    print(gradient)
-    print(linearReg2Grad(w, X, y))
+    print(f"Autograd gradient implementation: \n{gradient}")
+    print(f"Our gradient implemenation: {linearRegL2Grad(w, X, y)}\n")
+    print("\n")
+
 
     # Question 2a.2 ****************************************************
-    w = find_opt(linearReg2Obj, linearReg2Grad, X, y)
+    print(f"\nQUESTION 2A.2: Finding optimal solution of a convex optimization problem for linear regression L2 objective function")
+    w = find_opt(linearRegL2Obj, linearRegL2Grad, X, y)
     w_analytic = minimizeL2(X, y)
     print(f"via scipy.optimize minimize: \n {w}")
-    print(f"via minimizeL2: \n {w_analytic}")
+    print(f"via minimizeL2: \n {w_analytic}\n")
+    
+    
+    # Question 2b ****************************************************
+    # TODO: Test code for 2b
 
-    v = np.array([
-        [3],
-        [-1],
-        [4],
-    ])
 
-    [print(np.where(v >= 0, 1, 0))]
+    # Question 2c: ****************************************************
+    train_acc, test_acc = synClsExperiments()
+    print(f"\nQUESTION 2C: Average train and test accuracies for different training sizes (10, 50, 100, 200) and dimensions (dim1=1,2,4,8 and dim2=1,2,4,8\n")
+    print(f"TRAINING: \n{train_acc}\nTESTING:\n{test_acc}")
+    print("\n")
+
     
