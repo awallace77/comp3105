@@ -60,10 +60,11 @@ def _plotCls():
 	x_grid = np.arange(-4, 4, 0.01)
 	plt.plot(x_grid, (-w_opt[0]-w_opt[1]*x_grid) / w_opt[2], '--k')
 	plt.legend()
-	plt.show()
+	plt.savefig('plotCls.png')
+	# plt.show()
 
 
 if __name__ == "__main__":
 
 	_plotReg()
-	# _plotCls()
+	_plotCls()

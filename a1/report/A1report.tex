@@ -6,6 +6,8 @@
 \usepackage{amssymb}
 \usepackage{amsmath}
 \usepackage{enumerate}
+\usepackage{float} 
+
 
 %%%%%%%%%%%%%% Capsule %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \newcommand{\capsule}[2]{\vspace{0.5em}
@@ -30,6 +32,7 @@ COMP 3105 -- Assignment 1 Report\\
 {\bf Due:} Sunday September 28, 2025 23:59. \\
 Group 51 \\
 Andrew Wallace - 101210291\\
+TODO: Add name and student number 
 \end{center}
 
 \vspace{0.5em}
@@ -38,9 +41,9 @@ Andrew Wallace - 101210291\\
 \begin{question} \textbf{(7.5\%) Linear Regression}
 
   \begin{enumerate}[(a)] 
-    \item (1\%) $L_2$ Regression \\
+    \item \textbf{(1\%) $L_2$ Regression} \\
     Please see A1codes.py for implementation.
-    \item (3\%) $L_\infty$ Regression \\
+    \item (3\%) \textbf{$L_\infty$ Regression} \\
       Here we are going to solve the $L_\infty$ loss regression problem
       \begin{center}
         $\mathbf{w} = \text{argmin}_{\mathbf{w} \in \mathbb{R}^d} = ||X \mathbf{w} - \mathbf{y}||$
@@ -234,7 +237,7 @@ Andrew Wallace - 101210291\\
       Please see A1codes.py for full implementation. 
     \end{enumerate}
 
-    \item (2\%) Synthetic Regression Problem  \\
+    \item \textbf{(2\%) Synthetic Regression Problem}  \\
     In this part, you will evaluate your implemented algorithms on a synthetic dataset.
     \begin{enumerate}[(c.1)]
       \item (1\%) Implement a Python function \\
@@ -242,7 +245,7 @@ Andrew Wallace - 101210291\\
       Please see \textbf{A1codes.py} for full details.
       \item (1\%) Looking at your tables from above, analyze the results and discuss any findings you may have and the possible reason behind them. \\
       Note that the matrices below are representative of the following table:
-      \begin{table}[h!]
+      \begin{table}[H]
         \centering
         \begin{tabular}{|c|c|c|}
           \hline
@@ -252,35 +255,153 @@ Andrew Wallace - 101210291\\
           $L_\infty$ model &  &  \\ 
           \hline
         \end{tabular}
-        \caption{Different training losses for different models}
+        \caption{Table representation of loss data}
         \label{tab:basic_table}
-      \end{table} \\
+      \end{table}
       After running \texttt{synRegExperiments} on the regression\_train.csv and regression\_test.csv data sets we get the following results: \\
-      For training data: \\
-      $\begin{bmatrix}
-        2.00305568 & 7.31711154 \\
-        2.36347873 & 6.6215357
-      \end{bmatrix}$ \\[0.15 em]
-      For test data: \\[0.15 em]
-      $\begin{bmatrix}
-        1.66071948 & 5.58874693 \\
-        1.9868478 & 5.02664782
-      \end{bmatrix}$ \\[0.5 em]
+      For training data:
+      \begin{table}[H]
+        \centering
+        \begin{tabular}{|c|c|c|}
+          \hline
+          Model & Average $L_2$ loss & Average $L_\infty$ loss \\ 
+          \hline
+          $L_2$ model & 2.00305568 & 7.31711154 \\ 
+          $L_\infty$ model & 2.36347873 & 6.6215357 \\ 
+          \hline
+        \end{tabular}
+        \caption{Training losses for $L_2$ and $L_\infty$ models on regression\_train.csv}
+        \label{tab:training_losses_csv}
+      \end{table}
+      For test data: 
+      \begin{table}[H]
+        \centering
+        \begin{tabular}{|c|c|c|}
+          \hline
+          Model & Average $L_2$ loss & Average $L_\infty$ loss \\ 
+          \hline
+          $L_2$ model & 1.66071948 & 5.58874693 \\ 
+          $L_\infty$ model & 1.9868478 & 5.02664782 \\ 
+          \hline
+        \end{tabular}
+        \caption{Test losses for $L_2$ and $L_\infty$ models on regression\_test.csv}
+        \label{tab:test_losses_csv}
+      \end{table}
       For a randomly generated training and test data set using seed 101210291, we get the following results: \\[0.5 em]
-      For training data: \\
-      $\begin{bmatrix}
-        0.11160734 & 1.68718399 \\
-        0.27832791 & 0.91119205
-      \end{bmatrix}$ \\[0.15 em]
-      For test data: \\[0.15 em]
-      $\begin{bmatrix}
-        0.05252988 & 1.02181983 \\
-        0.35054548 & 2.26890905
-      \end{bmatrix}$ \\[0.15 em]
-
-      This shows that our $L_2$ loss, overall, has a lower average loss compared to the $L_\infty$ loss. 
+      For training data:
+      \begin{table}[H]
+        \centering
+        \begin{tabular}{|c|c|c|}
+          \hline
+          Model & Average $L_2$ loss & Average $L_\infty$ loss \\ 
+          \hline
+          $L_2$ model & 0.11160734 & 1.68718399 \\ 
+          $L_\infty$ model & 0.27832791 & 0.91119205 \\ 
+          \hline
+        \end{tabular}
+        \caption{Training losses for $L_2$ and $L_\infty$ models on random data seeded with 101210291}
+        \label{tab:train_losses_rand}
+      \end{table}
+      For test data:
+      \begin{table}[H]
+        \centering
+        \begin{tabular}{|c|c|c|}
+          \hline
+          Model & Average $L_2$ loss & Average $L_\infty$ loss \\ 
+          \hline
+          $L_2$ model & 0.05252988 & 1.02181983 \\ 
+          $L_\infty$ model & 0.35054548 & 2.26890905 \\ 
+          \hline
+        \end{tabular}
+        \caption{Test losses for $L_2$ and $L_\infty$ models on random data seeded with 101210291}
+        \label{tab:test_losses_rand}
+      \end{table}
+      This shows that our $L_2$ loss, overall, has a lower average loss compared to the $L_\infty$ loss. This suggests that the $L_2$ model fits the data better and will perform better compared to the $L_\infty$ model for this population. It is shown with both the training and test data that the $L_2$ model has a lower average $L_2$ loss than the $L_\infty$ loss. However, we see that in the $L_2$ model, the $L_\infty$ loss is significantly worse than the $L_\infty$ model, suggesting that there are a few individual points with high error.
     \end{enumerate}
+    \item \textbf{(1.5\%) Real-World Regression Problem}
+      \begin{enumerate}[(d.1)]
+        \item (1\%) Here you will apply the linear regression algorithm to the concrete compressive strength (CCS) dataset.
+        Please see \textbf{A1codes.py} for \texttt{preprocessCCS(dataset\_folder)} implemenation.
+        \item (0.5 \%) Implement a Python function 
+        Please see \textbf{A1codes.py} for \texttt{runCCS(dataset\_folder)} implemenation. \\
+        TODO: Add table of the results
+      \end{enumerate}
   \end{enumerate}
+\end{question}
+\begin{question} \textbf{(7.5\%) Logistic Regression}\\
+In this question, you will implement logistic regression, a classification method, and
+solve it using scipy.optimize.minimize.
+All of the following functions must be able to handle arbitrary $n > 0$ and $d > 0$.
+The vectors and matrices are represented as numpy arrays. Your functions shouldn't
+print additional information to the standard output. \\
+\begin{enumerate}[(a)]
+  \item \textbf{(2\% Solving Convex Problem)}
+  \begin{enumerate}[(a.1)]
+    \item (1\%) Before diving into logistic regression, let's first revisit the linear regression in Q1(a). Implement two python functions \\
+    Please see \textbf{A1codes.py} for the implemenation of \texttt{linearRegL2Obj(w, X, y)} and \texttt{linearRegL2Grad(w, X, y)}.
+    \item (1\%) Write a python function \\
+    Please see \textbf{A1codes.py} for the implemenation of \texttt{find\_opt(obj\_func, grad\_func, X, y)}.
+  \end{enumerate}
+  \item \textbf{(2\% Solving Logistic Regression)} \\
+  Implement two Python functions \\
+  Please see \textbf{A1codes.py} for the implemenation of \texttt{logisticRegObj(w, X, y)} and \texttt{logisticRegGrad(w, X, y)}.
+  \item \textbf{(2\% Synthetic Binary classification Problem)}
+  \begin{enumerate} [(c.1)]
+    \item (1\%) In this part, you will evaluate your implemenation on a synthetic dataset. Implement a Python function \\
+    Please see \textbf{A1codes.py} for the implemenation of \texttt{synClsExperiments()}. \\[0.5em]
+    After running \texttt{synClsExperiments} on the classification\_train.csv and classification\_test.csv data sets we get the following results:
+    \begin{enumerate}[$\cdot$]
+      \item For training data we get an accuracy of $0.93$
+      \item For test data we get an accuracy of $0.925$
+    \end{enumerate}
+    For a randomly generated training and test data set using seed 101210291, we get the following results: \\[0.5 em]
+    For training data:
+    \begin{table}[H]
+      \centering
+      \begin{tabular}{|c|c|c|}
+        \hline
+        \texttt{m} Train Accuracy & \texttt{dim1} Train Accuracy & \texttt{dim2} Train Accuracy \\ 
+        \hline
+        $10 = 0.9795 $ & $1 = 0.8421 $ & $1 = 0.92535 $ \\ 
+        $50 = 0.923 $ & $2 = 0.93095 $ & $2 = 0.92585$ \\ 
+        $100 = 0.92565 $ & $4 = 0.989 $ & $4 = 0.92755$ \\ 
+        $200 = 0.925225 $ & $8 = 1. $ & $8 = 0.93285$ \\ 
+        \hline
+      \end{tabular}
+      \caption{Training accuracy for different hyper-parameters for random data seeded with 101210291}
+      \label{tab:train_losses_cls_csv}
+    \end{table}
+
+    For test data:
+    \begin{table}[H]
+      \centering
+      \begin{tabular}{|c|c|c|}
+        \hline
+        \texttt{m} Test Accuracy & \texttt{dim1} Test Accuracy & \texttt{dim2} Test Accuracy \\ 
+        \hline
+        $10 = 0.875145 $ & $1 = 0.83864 $ & $1 = 0.918075$ \\ 
+        $50 = 0.9131$ & $2 = 0.91621 $ & $2 = 0.916885$ \\ 
+        $100 = 0.916855$ & $4 = 0.969865 $ & $4 = 0.914395$ \\ 
+        $200 = 0.919775$ & $8 = 0.99356$ & $8 = 0.90897$ \\ 
+        \hline
+      \end{tabular}
+      \caption{Test accuracy for different hyper-parameters for random data seeded with 101210291}
+      \label{tab:test_losses_cls_csv}
+    \end{table}
+    \item (1\%) Looking at your tables from above, analyze the results and discuss any findings you may have and the possible reasons behind them \\
+    The initial testing done on the real world data from the csv files shows that our logistic regression model is performing well with minimal accuracy drop when seeing new (test) data. \\
+    In our randomized dataset (seeded with 101210291), we see that as we introduce more training data (\texttt{m}), the training and test accuracies both improve. Initially, the training accuracy is high ($\approx97\%$) for \texttt{m} = 10, but is lower for training accuracy ($\approx 87\%$). This suggests that the model is overfitting for a small amount of training data. The results show that the as we train on more data, the model becomes more stable, and test accuracy improves. Furthermore, as we increase the number of features, specified in \texttt{dim1}, we see that both training and test accuracies trend towards 1. This shows that the more classification data we can train on, the better our model will be at predicting. Lastly, we see that in \texttt{dim2}, the accuracies stay more steady as the number of features increase. That is becuase these features are not weighted (-1/+1) like we do in \texttt{dim1} demonstrating that features that don't provide valuable information don't increase our accuracy. 
+  \end{enumerate}
+  \item \textbf{(1.5\%) Real-World Binary Classification Problem}
+  \begin{enumerate}[(d.1)]
+    \item (1\%) Now you will apply logistic regression a real-world problem, the Breast Cancer Wisconsin (BCW) dataset\\
+    To start, you need to preprocess the data. Implement a Python function \\
+    Please see \textbf{A1codes.py} for \texttt{preprocessBCW(dataset\_folder)} implemenation.
+    \item (0.5\%) Implement a Python function\\
+    Please see \textbf{A1codes.py} for \texttt{runBCW(dataset\_folder)} implemenation.
+
+  \end{enumerate}
+\end{enumerate}
 
 \end{question}
 
