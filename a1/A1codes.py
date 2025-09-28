@@ -7,6 +7,17 @@ from scipy.optimize import minimize
 import autograd as ag
 import autograd.numpy as agnp
 
+'''
+
+    COMP3105: Assignment 1
+    Linear and Logistic Regression
+    Due: September 28th, 2025
+    Authors:
+        Andrew Wallace - 101210291
+        Christer Henrysson - 101260693
+
+'''
+
 # HELPER FUNCTIONS ***************************************************
 
 def L2_loss(X, w, y):
@@ -138,13 +149,13 @@ def synRegExperiments():
         """
         This function generates real data from regression_train and regression_test csv
         """
-        X = []
+        X = np.array([])
         # Trying with regression training data
         try:
             if(is_training):
-                X = np.genfromtxt('a1/toy_data/regression_train.csv', delimiter=',', skip_header=1).astype(float)
+                X = np.genfromtxt('toy_data/regression_train.csv', delimiter=',', skip_header=1).astype(float)
             else: 
-                X = np.genfromtxt('a1/toy_data/regression_test.csv', delimiter=',', skip_header=1).astype(float)
+                X = np.genfromtxt('toy_data/regression_test.csv', delimiter=',', skip_header=1).astype(float)
         except FileNotFoundError:
             print("Error: file not found. Please create the file or provide the correct path.")
         except Exception as e:
@@ -448,13 +459,13 @@ def synClsExperiments():
         """
         This function generates real data from regression_train and regression_test csv
         """
-        X = []
+        X = np.array([])
         # Trying with regression training data
         try:
             if(is_training):
-                X = np.genfromtxt('a1/toy_data/classification_train.csv', delimiter=',', skip_header=1).astype(float)
+                X = np.genfromtxt('toy_data/classification_train.csv', delimiter=',', skip_header=1).astype(float)
             else: 
-                X = np.genfromtxt('a1/toy_data/classification_test.csv', delimiter=',', skip_header=1).astype(float)
+                X = np.genfromtxt('toy_data/classification_test.csv', delimiter=',', skip_header=1).astype(float)
         except FileNotFoundError:
             print("Error: file not found. Please create the file or provide the correct path.")
         except Exception as e:
@@ -588,17 +599,30 @@ def runBCW(dataset_folder):
     return avg_train_acc, avg_test_acc
 
 
+# NOTE: Uncomment for local testing. Thank you!
+'''
 if __name__ == "__main__":
+
+    ccs_folder = "ccs"
+    bcw_folder = "bcw"
 
     # Question 1a ****************************************************
     # Please use a1testbed.py
+    print(f"\nQUESTION 1A: Please use A1testbed.py\n")
 
     # Question 1b ****************************************************
     # Please see A1report.pdf
+    print(f"\nQUESTION 1B: A1report.pdf\n")
     
     # Question 1c ****************************************************
     print(f"\nQUESTION 1C: Linear regression synthetic experiments\n")
     train_loss, test_loss = synRegExperiments()
+    print(f"TRAINING: \n{train_loss}\nTESTING:\n{test_loss}")
+    print("\n")
+
+    # Question 1d ****************************************************
+    print(f"\nQUESTION 1D: Linear regression on real world data\n")
+    train_loss, test_loss = runCCS(ccs_folder)
     print(f"TRAINING: \n{train_loss}\nTESTING:\n{test_loss}")
     print("\n")
 
@@ -648,5 +672,10 @@ if __name__ == "__main__":
     print(f"\nQUESTION 2C: Average train and test accuracies for different training sizes (10, 50, 100, 200) and dimensions (dim1=1,2,4,8 and dim2=1,2,4,8\n")
     print(f"TRAINING: \n{train_acc}\nTESTING:\n{test_acc}")
     print("\n")
-
     
+    # Question 2d: ****************************************************
+    train_acc, test_acc = runBCW(bcw_folder)
+    print(f"\nQUESTION 2D: Average train and test accuracies BCW\n")
+    print(f"TRAINING: \n{train_acc}\nTESTING:\n{test_acc}")
+
+'''    
