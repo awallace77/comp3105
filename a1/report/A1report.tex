@@ -1,3 +1,4 @@
+
 \documentclass[12pt]{article}
 
 \usepackage{fullpage}
@@ -32,9 +33,13 @@ COMP 3105 -- Assignment 1 Report\\
 {\bf Due:} Sunday September 28, 2025 23:59. \\
 Group 51 \\
 Andrew Wallace - 101210291\\
-TODO: Add name and student number 
+Christer Henrysson - 101260693\\[1em]
 \end{center}
-
+\textbf{Getting started} \\
+Note that Python 3.11 was used for this assignment. Please install requirements using virtual environment via: \\
+  \texttt{python3.11 venv .venv} \\
+  \texttt{source .venv/bin/activate} \\
+  \texttt{pip install -r requirements.txt}
 \vspace{0.5em}
 \newpage 
 
@@ -320,11 +325,40 @@ TODO: Add name and student number
     \end{enumerate}
     \item \textbf{(1.5\%) Real-World Regression Problem}
       \begin{enumerate}[(d.1)]
-        \item (1\%) Here you will apply the linear regression algorithm to the concrete compressive strength (CCS) dataset.
+        \item (1\%) Here you will apply the linear regression algorithm to the concrete compressive strength (CCS) dataset. \\
         Please see \textbf{A1codes.py} for \texttt{preprocessCCS(dataset\_folder)} implemenation.
-        \item (0.5 \%) Implement a Python function 
+        \item (0.5 \%) Implement a Python function \\
         Please see \textbf{A1codes.py} for \texttt{runCCS(dataset\_folder)} implemenation. \\
-        TODO: Add table of the results
+        For training data:
+        \begin{table}[H]
+          \centering
+          \begin{tabular}{|c|c|c|}
+            \hline
+            Model & Average $L_2$ loss & Average $L_\infty$ loss \\ 
+            \hline
+            $L_2$ model & 52.7794 & 32.6402 \\ 
+            $L_\infty$ model & 65.5936 & 26.2982 \\ 
+            \hline
+          \end{tabular}
+          \caption{Training losses for $L_2$ and $L_\infty$ models on CCS dataset}
+          \label{tab:ccs_train}
+        \end{table}
+
+        For test data:
+        \begin{table}[H]
+          \centering
+          \begin{tabular}{|c|c|c|}
+            \hline
+            Model & Average $L_2$ loss & Average $L_\infty$ loss \\ 
+            \hline
+            $L_2$ model & 55.6988 & 33.3930 \\ 
+            $L_\infty$ model & 68.1230 & 37.3159 \\ 
+            \hline
+          \end{tabular}
+          \caption{Test losses for $L_2$ and $L_\infty$ models on CCS dataset}
+          \label{tab:ccs_test}
+        \end{table}
+
       \end{enumerate}
   \end{enumerate}
 \end{question}
@@ -390,7 +424,7 @@ print additional information to the standard output. \\
     \end{table}
     \item (1\%) Looking at your tables from above, analyze the results and discuss any findings you may have and the possible reasons behind them \\
     The initial testing done on the real world data from the csv files shows that our logistic regression model is performing well with minimal accuracy drop when seeing new (test) data. \\
-    In our randomized dataset (seeded with 101210291), we see that as we introduce more training data (\texttt{m}), the training and test accuracies both improve. Initially, the training accuracy is high ($\approx97\%$) for \texttt{m} = 10, but is lower for training accuracy ($\approx 87\%$). This suggests that the model is overfitting for a small amount of training data. The results show that the as we train on more data, the model becomes more stable, and test accuracy improves. Furthermore, as we increase the number of features, specified in \texttt{dim1}, we see that both training and test accuracies trend towards 1. This shows that the more classification data we can train on, the better our model will be at predicting. Lastly, we see that in \texttt{dim2}, the accuracies stay more steady as the number of features increase. That is becuase these features are not weighted (-1/+1) like we do in \texttt{dim1} demonstrating that features that don't provide valuable information don't increase our accuracy. 
+    In our randomized dataset (seeded with 101210291), we see that as we introduce more training data (\texttt{m}), the training and test accuracies both improve. Initially, the training accuracy is high ($\approx97\%$) for \texttt{m} = 10, but is lower for test accuracy ($\approx 87\%$). This suggests that the model is overfitting for a small amount of training data. The results show that the as we train on more data, the model becomes more stable, and test accuracy improves. Furthermore, as we increase the number of features, specified in \texttt{dim1}, we see that both training and test accuracies converge to 1. This shows that the more classification data we can train on, the better our model will be at predicting new data. Lastly, we see that in \texttt{dim2}, the accuracies stay more steady as the number of features increase. That is becuase these features are not weighted (-1/+1) like we do in \texttt{dim1} demonstrating that features that don't provide valuable information don't necessarily increase our accuracy. 
   \end{enumerate}
   \item \textbf{(1.5\%) Real-World Binary Classification Problem}
   \begin{enumerate}[(d.1)]
