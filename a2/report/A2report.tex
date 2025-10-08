@@ -1,0 +1,114 @@
+
+\documentclass[12pt]{article}
+
+\usepackage{fullpage}
+\usepackage{fancybox}
+\usepackage{graphicx}
+\usepackage{amssymb}
+\usepackage{amsmath}
+\usepackage{enumerate}
+\usepackage{float} 
+
+
+%%%%%%%%%%%%%% Capsule %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\newcommand{\capsule}[2]{\vspace{0.5em}
+  \shadowbox{%
+    \begin{minipage}{.90\linewidth}%
+      \textbf{#1:}~#2%
+    \end{minipage}}
+  \vspace{0.5em} }
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\newcounter{ques}
+\newenvironment{question}{\stepcounter{ques}{\noindent\bf Question \arabic{ques}:}}{\vspace{5mm}}
+
+\begin{document} 
+
+\begin{center} \Large\bf
+COMP 3105 -- Assignment 2 Report\\
+-- Fall 2025 -- 
+\end{center} 
+
+\begin{center}
+{\bf Due:} Sunday October 19, 2025 23:59. \\
+Group 51 \\
+Andrew Wallace - 101210291\\
+Christer Henrysson - 101260693\\[1em]
+\end{center}
+\textbf{Getting started} \\
+Note that Python 3.10 is used for this assignment. Please install requirements using virtual environment via: \\
+  \texttt{python3.10 -m venv .venv} \\
+  \texttt{source .venv/bin/activate} \\
+  \texttt{pip install -r requirements.txt}
+\vspace{0.5em}
+\newpage 
+
+\section*{Question 1 (5\%) Binary Classifier (Primal Form)}
+In this question, you will implement binary classification with different losses from scratch, in Python using NumPy/SciPy, and evaluate their performances on the synthetic datasets from above with different regularization hyper-parameters. You will learn some essential built-in functions like \texttt{scipy.optimize.minimize} to solve unconstrained problems and \texttt{cvxopt.solvers.qp} to solve quadratic programmings.
+The input vectors are assumed to be \textbf{un-augmented} in this question (i.e. we do not add a constant feature of 1 to it). All of the following functions must be able to handle arbitrary $n > 0$ and $d > 0$. The vectors and matrices are represented as NumPy arrays. Your functions shouldn't print additional information to the
+standard output.
+\begin{enumerate}[(a)]
+  \item (1\%) Implement a Python function 
+  \begin{center}
+    \texttt{w, w0 = minExpLinear(X, y, lamb)}
+  \end{center}
+  \item (1\%) Implement a Python function
+    \begin{center}
+      \texttt{w, w0 = minHinge(X, y, lamb, stablizer=1e-5)}
+    \end{center}
+  \item (1\%) Implement a Python function 
+  \begin{center}
+    \texttt{yhat = classify(Xtest, w, w0)}
+  \end{center}
+  \item (1\%) In this part, you will evaluate your implementation with different regularization hyper-parameters. Implement a Python function 
+  \begin{center}
+    \texttt{train\_acc, test\_acc = synExperimentsRegularize()}
+  \end{center}
+  \item (1\%) Looking at your tables from above, analyze the results and discuss any findings you may have and the possible reasons behind them.
+\end{enumerate}
+
+\section*{Question 2 (5\%) Binary Classification (Adjoint Form)}
+In this question, you will implement binary classification with different losses (again) using the adjoint formula coming from the representer theorem, and evaluate their performances on the synthetic datasets from above with different kernels.
+The input vectors are assumed to be \textbf{un-augmented} in this question (i.e. we do not add a constant feature of 1 to it). All of the following functions must be able to handle arbitrary $n > 0$ and $d > 0$. The vectors and matrices are represented as NumPy arrays. Your functions shouldn't print additional information to the
+standard output.
+\begin{enumerate}[(a)]
+  \item (1\%) Implement a Python function
+  \begin{center}
+    \texttt{a, a0 = adjExpLinear(X, y, lamb, kernel\_func)}
+  \end{center}
+  \item (1\%) Implement a Python function
+  \begin{center}
+    \texttt{a, a0 = adjHinge(X, y, lamb, kernel\_func, stabilizer=1e-5)}
+  \end{center}
+  \item (1\%) Implement a Python function
+  \begin{center}
+    \texttt{yhat = adjClassify(Xtest, a, a0, X, kernel\_func)}
+  \end{center}
+  \item (1\%) In this part, you will evaluate your implementation with different kernels. Implement a Python function
+  \begin{center}
+    \texttt{train\_acc, test\_acc = synExperimentsKernel()}
+  \end{center}
+  \item (1\%) Looking at your tables from above, analyze the results and discuss any findings you may have and the possible reasons behind them.
+\end{enumerate}
+
+\section*{Question 3 (5\%) Binary Classification (SVM Dual Form)}
+In this question, you will implement binary classification with the hinge loss (yet again) using the dual formula, and choose the best hyper-parameter and kernel for some real-world problems via cross-validation.
+The input vectors are assumed to be \textbf{un-augmented} in this question (i.e. we do not add a constant feature of 1 to it). All of the following functions must be able to handle arbitrary $n > 0$ and $d > 0$. The vectors and matrices are represented as NumPy arrays. Your functions shouldn't print additional information to the
+standard output.
+\begin{enumerate}[(a)]
+  \item (1\%) Implement a Python function
+  \begin{center}
+    \texttt{a, b = dualHinge(X, y, lamb, kernel\_func, stabilizer=1e-5)}
+  \end{center}
+  \item (1\%) Implement a Python function
+  \begin{center}
+    \texttt{yhat = dualClassify(Xtest, a, b, X, y, lamb, kernel\_func)}
+  \end{center}
+  \item (2\%) The A2files.zip includes an image dataset, A2train.csv, of handwritten digits taken from the MNIST dataset. Each image is either digit 4 or digit 9 (once loaded, you can call the \texttt{plotDigit} function to see some samples of the images as in Fig. 4). The first column of the csv file is the class label. Treat digit 4 as the -1 class and digit 9 as the +1 class, your task is to use your \texttt{dualHinge} function to learn a good binary classifier.\\
+  In this part, you need to perform cross-validation and select the best hyperparameters and kernels for this dataset. Implement a Python function
+  \begin{center}
+    \texttt{cv acc, best lamb, best kernel = cvMnist(dataset\_folder, lamb\_list, kernel\_list, k=5)}
+  \end{center}
+  \item (1\%) We will evaluate your choices from (c) on a new test dataset (that you don’t have access to). You will get full mark here if your chosen hyper-parameters, kernel function, dualHinge and dualClassify can achieve acceptable performance on the test dataset.
+\end{enumerate}
+\end{document} 
