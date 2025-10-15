@@ -8,6 +8,7 @@
 \usepackage{amsmath}
 \usepackage{enumerate}
 \usepackage{float} 
+\usepackage{multirow}
 
 
 %%%%%%%%%%%%%% Capsule %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -68,8 +69,44 @@ standard output.
       \texttt{train\_acc, test\_acc = synExperimentsRegularize()}
     \end{center}
     Please see \texttt{A2codes.py} for the implementation of \texttt{synExperimentsRegularize()} \\
-    The 
-  \item (1\%) Looking at your tables from above, analyze the results and discuss any findings you may have and the possible reasons behind them.
+    The averages over 100 runs for each accuracy (one for training and the other for test) can be seen in the following tables. 
+    \begin{table}[H]
+      \centering
+      \begin{tabular}{|c|c|c|c|c|c|c|}
+        \hline
+        \multirow{2}{25mm}{\centering$\lambda$} & \multicolumn{3}{|c|}{ExpLinear} & \multicolumn{3}{|c|}{Hinge} \\ 
+        \cline{2-7}
+        & Model 1 & Model 2 & Model 3 & Model 1 & Model 2 & Model 3 \\ 
+        \hline
+        $0.001$ & 0.9999 & 0.5969 & 0.8768 & 0.999 & 0.6162 & 0.8711\\ 
+        $0.01$ & 0.998 & 0.6032 & 0.8761 & 0.995 & 0.6149 & 0.8698\\ 
+        $0.1$ & 0.9962 & 0.5935 & 0.8743 & 0.9909 & 0.6105 & 0.8692\\ 
+        $1.0$ & 0.9882 & 0.5981 & 0.8681 & 0.9816 & 0.6136 & 0.8644\\ 
+        \hline
+      \end{tabular}
+      \caption{Training accuracies with different hyper-parameters}
+      \label{tab:training_acc_explinear_hinge}
+    \end{table}
+    \begin{table}[H]
+      \centering
+      \begin{tabular}{|c|c|c|c|c|c|c|}
+        \hline
+        \multirow{2}{25mm}{\centering$\lambda$} & \multicolumn{3}{|c|}{ExpLinear} & \multicolumn{3}{|c|}{Hinge} \\ 
+        \cline{2-7}
+        & Model 1 & Model 2 & Model 3 & Model 1 & Model 2 & Model 3 \\ 
+        \hline
+        $0.001$ & 0.98979 & 0.5655 & 0.88019 & 0.98812 & 0.60035 & 0.87802\\ 
+        $0.01$ & 0.98967 & 0.58031 & 0.88161 & 0.98608 & 0.60598 & 0.87887\\ 
+        $0.1$ & 0.98628 & 0.57143 & 0.88118 & 0.98253 & 0.60263 & 0.8773\\ 
+        $1.0$ & 0.98098 & 0.57876 & 0.87376 & 0.97381 & 0.60573 & 0.87105\\ 
+        \hline
+      \end{tabular}
+      \caption{Test accuracies with different hyper-parameters}
+      \label{tab:test_acc_explinear_hinge}
+    \end{table}
+  \item (1\%) Looking at your tables from above, analyze the results and discuss any findings you may have and the possible reasons behind them. \\
+  We can see that the training accuracies are higher when $\lambda$ approaches zero. This is because when lambda approaches zero, the regularization term $\frac{1}{2}\lambda ||\mathbf{w}||_2^2$ also approaches zero. This term is used to prevent overfitting by penalizing complex models. That is, the greater $||\textbf{w}||_2^2$ is (more complex), the greater the value of our objective function will be. The parameter $\lambda$ determines how complex our model is allowed to be. When $\lambda$ is large, the regularization term dominates, and our objective turns into minimizing the complexity of our model. When $\lambda$ is small, the loss function dominates, and our objective turns into minimizing the loss of our model. So, we see the accuracies of our training data increase (from model to model) as our $\lambda$ decreases, since we primarily focus on minimizing the loss. Conversely, as $\lambda$ gets larger (closer to 1), our accuracies decrease. \\[1em]
+  Note that this is not necessarily true when it comes to testing. If our model is overfitted to our training data, then our accuracies for test data will suffer. See the test accuracy for \texttt{ExpLinear}, Model 2. Here we can see that $\lambda = 0.01, 0.1, \text{and} 1.0$ all have higher accuracies compared to $\lambda = 0.001$. This is likely due to the simplified models used (as $\lambda$ increases) being a better fit for the test data.
 \end{enumerate}
 
 \section*{Question 2 (5\%) Binary Classification (Adjoint Form)}
