@@ -5,6 +5,7 @@
 import numpy as np
 from scipy.spatial.distance import cdist
 from matplotlib import pyplot as plt
+import random
 
 
 def linearKernel(X1, X2):
@@ -109,7 +110,8 @@ def plotModel(X, y, w, w0, classify):
     z = z.reshape(xx.shape)
     plt.contourf(xx, yy, z, cmap=plt.cm.RdBu, alpha=0.5)
     plt.legend()
-    plt.show()
+    # plt.show()
+    plt.savefig(f"model{random.random()}.png")
     return
 
 
