@@ -49,21 +49,26 @@ The input vectors are assumed to be \textbf{un-augmented} in this question (i.e.
 standard output.
 \begin{enumerate}[(a)]
   \item (1\%) Implement a Python function 
-  \begin{center}
-    \texttt{w, w0 = minExpLinear(X, y, lamb)}
-  \end{center}
+    \begin{center}
+      \texttt{w, w0 = minExpLinear(X, y, lamb)}
+    \end{center}
+    Please see \texttt{A2codes.py} for the implementation of \texttt{minExpLinear(X, y, lamb)}
   \item (1\%) Implement a Python function
     \begin{center}
       \texttt{w, w0 = minHinge(X, y, lamb, stablizer=1e-5)}
     \end{center}
+    Please see \texttt{A2codes.py} for the implementation of \texttt{minHinge(X, y, lamb, stabilizer=1e-5)}
   \item (1\%) Implement a Python function 
-  \begin{center}
-    \texttt{yhat = classify(Xtest, w, w0)}
-  \end{center}
+    \begin{center}
+      \texttt{yhat = classify(Xtest, w, w0)}\\
+    \end{center}
+    Please see \texttt{A2codes.py} for the implementation of \texttt{classify(Xtest, w, w0)}
   \item (1\%) In this part, you will evaluate your implementation with different regularization hyper-parameters. Implement a Python function 
-  \begin{center}
-    \texttt{train\_acc, test\_acc = synExperimentsRegularize()}
-  \end{center}
+    \begin{center}
+      \texttt{train\_acc, test\_acc = synExperimentsRegularize()}
+    \end{center}
+    Please see \texttt{A2codes.py} for the implementation of \texttt{synExperimentsRegularize()} \\
+    The 
   \item (1\%) Looking at your tables from above, analyze the results and discuss any findings you may have and the possible reasons behind them.
 \end{enumerate}
 
