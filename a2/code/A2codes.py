@@ -1,6 +1,7 @@
 import numpy as np
 from scipy.optimize import minimize
 from cvxopt import matrix, solvers
+from A2helpers import *
 
 '''
     COMP3105
@@ -14,35 +15,38 @@ from cvxopt import matrix, solvers
 # (a) 
 def minExpLinear(X, y, lamb):
     """
-        Calculates the optimal parameters and scalar intercept to the solution of the regularized ExpLinear Loss
-        Parameters:
+        This function computes the best model with ExpLinear loss and L2 regularization.
+        Args:
             X: nxd input matrix
             y: nx1 target vector
-            lamb: regularization hyper-parameter 
+            lamb: regularization hyper-parameter (> 0)
+        Returns:
+            A tuple of optimal model parameters (w, w0) where w is d-by-1 and w0 is a scalar
     """
 
-    _, d = X.shape
-    w0 = np.ones(d + 1)
+    d = X.shape[1]
 
-    def expLinear(w):
-        # margin
-        m = y * (X @ w[1:] + w[0]) 
-        losses = np.where(-m >= 0, 1 - m, np.exp(-m))
-        reg = (lamb / 2) * np.sum(w[1:].T @ w[1:])
-        sum = np.sum(losses) + reg
-        return sum
-    
-    res = minimize(expLinear, w0)
-    w = res.x[1:]
-    w0 = res.x[0]
+    # Define objective
+    def obj_func(u):
 
-    # TODO: REMOVE AFTER DEBUG
-    print("Optimization success:", res.success)
-    print("Final loss:", res.fun)
-    print("Optimal weights:", res.x)
-    pred = np.sign(X_complex @ res.x[1:] + res.x[0])
-    accuracy = np.mean(pred == y_complex)
-    print(f"Accuracy: {accuracy*100:.2f}%")
+        w0 = u[-1]  # last unknown is w0
+        w = u[:-1]  # the first d dimensions are w
+        w = w[:, None]  # make it d-by-1
+
+        m = y * (X @ w + w0) 
+        loss = np.sum(np.where(m <= 0, 1 - m, np.exp(-m)))
+        reg = 0.5 * lamb * float((w.T @ w)[0][0])
+        
+        return loss + reg
+
+    # Initial guess of unknowns, shouldn't matter for convex problem
+    u0 = np.ones(d + 1)  
+
+    sol = minimize(obj_func, u0)  # objective function + initial guess as inputs
+
+    # Get the solution
+    w = sol['x'][:-1][:, None]  # make it d-by-1
+    w0 = sol['x'][-1]
 
     return w, w0
 
@@ -50,24 +54,27 @@ def minExpLinear(X, y, lamb):
 # Question 1(b)
 def minHinge(X, y, lamb, stabilizer=1e-5):
     """
-        Calculates the parameters and scalar intercept of the solution to the regularized hinge loss
+        This function computes the best model with hinge loss and L2 regularization.
+        Args:
+            X: nxd input matrix
+            y: nx1 target vector
+            lamb: regularization hyper-parameter (> 0)
+            stabilizer: small positive stabilizer added to diagonal of P
+        Returns:
+            A tuple of optimal model parameters (w, w0) where w is d-by-1 and w0 is a scalar
     """
     n, d = X.shape
-    
+
+    # construct P, q, G, and h for qp 
     q = np.concatenate([np.zeros(d + 1), np.ones(n)])
     G1 = np.hstack([np.zeros((n, d)), np.zeros((n, 1)), -np.eye(n)])
-    G2 = np.hstack([-np.diag(y) @ X, -y[:, None], -np.eye(n)])
+    G2 = np.hstack([-np.diag(y.reshape(n,)) @ X, -y, -np.eye(n)])
     G = np.vstack([G1, G2])
     h = np.concatenate([np.zeros((n, 1)), -np.ones((n, 1))])
 
-    P = np.block([
-        [lamb * np.eye(d), np.zeros((d, 1)), np.zeros((d, n))],
-        [np.zeros((1, d)), np.zeros((1, 1)), np.zeros((1, n))],
-        [np.zeros((n, d)), np.zeros((n, 1)), np.zeros((n, n))],
-    ])
-
-    # Add stabilizer
-    P = P + stabilizer * np.eye(n + d + 1)
+    P = np.zeros((d + 1 + n, d + 1 + n))
+    P[:d, :d] = lamb * np.eye(d)  # only w is regularized
+    P = P + stabilizer * np.eye(n + d + 1)  # add stabilizer
 
     # Convert to cvx matrices
     P = matrix(P)
@@ -75,66 +82,76 @@ def minHinge(X, y, lamb, stabilizer=1e-5):
     G = matrix(G)
     h = matrix(h)
 
+    solvers.options['show_progress'] = False
     sol = solvers.qp(P, q, G, h)
     u = np.array(sol['x']).flatten()
-    w = u[:d]
+    w = u[:d][:, None] # make it dx1
     w0 = u[d] 
+
     return  w, w0
 
 
+# Question 1 (c)
+def classify(Xtest, w, w0):
+    """
+        This function computes the prediction of a given model.
+        Args:
+            X: mxd test matrix
+            w: dx1 model parameters
+            w0: scalar bias for model
+        Returns:
+            A mx1 vector of predictions for the given model 
+    """
+    y_hat = np.sign(Xtest @ w + w0)
+    return y_hat
 
+# Question 1(d)
+def synExperimentsRegularize():
+    """
+        This function runs a synthetic experiment for the expLinear and hinge losses with L2 regularization.
+        Returns:
+            A 4x6 matrix of average training accuracies and a 4x6 matrix of average test accuracies 
+    """
+    n_runs = 100
+    n_train = 100
+    n_test = 1000
+    lamb_list = [0.001, 0.01, 0.1, 1.]
+    gen_model_list = [1, 2, 3]
+    train_acc_explinear = np.zeros([len(lamb_list), len(gen_model_list), n_runs])
+    test_acc_explinear = np.zeros([len(lamb_list), len(gen_model_list), n_runs])
+    train_acc_hinge = np.zeros([len(lamb_list), len(gen_model_list), n_runs])
+    test_acc_hinge = np.zeros([len(lamb_list), len(gen_model_list), n_runs])
+
+    np.random.seed(51)
+    for r in range(n_runs):
+        for i, lamb in enumerate(lamb_list):
+            for j, gen_model in enumerate(gen_model_list):
+                Xtrain, ytrain = generateData(n=n_train, gen_model=gen_model)
+                Xtest, ytest = generateData(n=n_test, gen_model=gen_model)
+
+                w, w0 = minExpLinear(Xtrain, ytrain, lamb)
+                train_acc_explinear[i, j, r] = np.mean(ytrain == classify(Xtrain, w, w0))
+                test_acc_explinear[i, j, r] = np.mean(ytest == classify(Xtest, w, w0)) 
+
+                w, w0 = minHinge(Xtrain, ytrain, lamb)
+                train_acc_hinge[i, j, r] = np.mean(ytrain == classify(Xtrain, w, w0))
+                test_acc_hinge[i, j, r] = np.mean(ytest == classify(Xtest, w, w0))
+
+    # Calculate avg training acc for explinear & hinge loss
+    avg_train_acc_explinear = np.mean(train_acc_explinear, axis=2)
+    avg_train_acc_hinge = np.mean(train_acc_hinge, axis=2)
+    avg_train_acc = np.hstack([avg_train_acc_explinear, avg_train_acc_hinge])
+    
+    # Calculate avg test acc for explinear & hinge loss
+    avg_test_acc_explinear = np.mean(test_acc_explinear, axis=2)
+    avg_test_acc_hinge = np.mean(test_acc_hinge, axis=2)
+    avg_test_acc = np.hstack([avg_test_acc_explinear, avg_test_acc_hinge])
+
+    return avg_test_acc, avg_train_acc
 
 if __name__ == "__main__":
-    np.random.seed(42)  # for reproducibility
 
-    # QUESTION 1A
-    n_samples = 200
-
-    # Class +1: centered at (2, 2)
-    X_pos = np.random.randn(n_samples // 2, 2) + np.array([2, 2])
-
-    # Class -1: centered at (-2, -2)
-    X_neg = np.random.randn(n_samples // 2, 2) + np.array([-2, -2])
-
-    # Combine
-    X_complex = np.vstack([X_pos, X_neg])
-    y_complex = np.hstack([np.ones(n_samples // 2), -np.ones(n_samples // 2)])
-
-    # Add some noise / overlap to make it less trivial
-    X_complex[:20] += np.random.randn(20, 2) * 4
-
-    lamb = 0.1
-    w, w0 = minExpLinear(X_complex, y_complex, lamb)
-    
-
-
-    # QUESTION 1B
-    # --- Test Dataset ---
-    # Simple 2D linearly separable data
-    X = np.array([
-        [2, 3],
-        [3, 3],
-        [2, 1],
-        [3, 1]
-    ])
-
-    y = np.array([1, 1, -1, -1])  # labels
-
-    # Regularization parameter
-    lamb = 1.0
-
-    # Solve SVM
-    w, w0 = minHinge(X, y, lamb)
-
-    print("Weights:", w)
-    print("Bias:", w0)
-
-    # --- Optional: Test predictions ---
-    def predict(X, w, w0):
-        return np.sign(X @ w + w0)
-
-    preds = predict(X, w, w0)
-    print("Predictions:", preds)
-    print("True labels:", y)
+    # Question 1 (d)
+    synExperimentsRegularize()
 
 
