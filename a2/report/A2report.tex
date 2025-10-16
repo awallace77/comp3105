@@ -115,22 +115,68 @@ The input vectors are assumed to be \textbf{un-augmented} in this question (i.e.
 standard output.
 \begin{enumerate}[(a)]
   \item (1\%) Implement a Python function
-  \begin{center}
-    \texttt{a, a0 = adjExpLinear(X, y, lamb, kernel\_func)}
-  \end{center}
+    \begin{center}
+      \texttt{a, a0 = adjExpLinear(X, y, lamb, kernel\_func)}
+    \end{center}
+    Please see \texttt{A2codes.py} for the implementation of \texttt{adjExpLinear(X, y, lamb, kernel\_func)}
   \item (1\%) Implement a Python function
-  \begin{center}
-    \texttt{a, a0 = adjHinge(X, y, lamb, kernel\_func, stabilizer=1e-5)}
-  \end{center}
+    \begin{center}
+      \texttt{a, a0 = adjHinge(X, y, lamb, kernel\_func, stabilizer=1e-5)}
+    \end{center}
+    Please see \texttt{A2codes.py} for the implementation of \texttt{adjHinge(X, y, lamb, kernel\_func, stabilizer=1e-5)}
   \item (1\%) Implement a Python function
-  \begin{center}
-    \texttt{yhat = adjClassify(Xtest, a, a0, X, kernel\_func)}
-  \end{center}
+    \begin{center}
+      \texttt{yhat = adjClassify(Xtest, a, a0, X, kernel\_func)}
+    \end{center}
+    Please see \texttt{A2codes.py} for the implementation of \texttt{adjClassify(Xtest, a, a0, X, kernel\_func)}
   \item (1\%) In this part, you will evaluate your implementation with different kernels. Implement a Python function
-  \begin{center}
-    \texttt{train\_acc, test\_acc = synExperimentsKernel()}
-  \end{center}
-  \item (1\%) Looking at your tables from above, analyze the results and discuss any findings you may have and the possible reasons behind them.
+    \begin{center}
+      \texttt{train\_acc, test\_acc = synExperimentsKernel()}
+    \end{center}
+    Please see \texttt{A2codes.py} for the implementation of \texttt{synExperimentsKernel()}. \\
+    The results can be seen in the tables below.    
+    \begin{table}[H]
+      \centering
+      \begin{tabular}{|c|c|c|c|c|c|c|}
+        \hline
+        \multirow{2}{25mm}{\centering Kernel} & \multicolumn{3}{|c|}{ExpLinear} & \multicolumn{3}{|c|}{Hinge} \\ 
+        \cline{2-7}
+        & Model 1 & Model 2 & Model 3 & Model 1 & Model 2 & Model 3 \\ 
+        \hline
+        Linear & 1.0 & 0.578 & 0.882 & 0.999 & 0.595 & 0.876 \\ 
+        Poly($d = 2$) & 1.0 & 1.0 & 0.879 & 0.998 & 1.0 & 0.871\\ 
+        Poly($d = 3$) & 1.0 & 1.0 & 1.0 & 1.0 & 1.0 & 1.0\\ 
+        Gauss($\sigma = 1$) & 1.0 & 1.0 & 1.0 & 0.999 & 1.0 & 1.0\\ 
+        Gauss($\sigma = 0.5$) & 1.0 & 1.0 & 1.0 & 1.0 & 1.0 & 0.999\\ 
+        \hline
+      \end{tabular}
+      \caption{Training accuracies with different kernels}
+      \label{tab:train_acc_explinear_hinge_kernel}
+    \end{table}
+    \begin{table}[H]
+      \centering
+      \begin{tabular}{|c|c|c|c|c|c|c|}
+        \hline
+        \multirow{2}{25mm}{\centering Kernel} & \multicolumn{3}{|c|}{ExpLinear} & \multicolumn{3}{|c|}{Hinge} \\ 
+        \cline{2-7}
+        & Model 1 & Model 2 & Model 3 & Model 1 & Model 2 & Model 3 \\ 
+        \hline
+        Linear & 0.9884 & 0.5655 & 0.8826 & 0.9889 & 0.6084 & 0.879 \\ 
+        Poly($d = 2$) & 0.9886 & 0.9724 & 0.8809 & 0.9868 & 0.9723 & 0.8782\\ 
+        Poly($d = 3$) & 0.9815 & 0.9655 & 0.9949 & 0.9774 & 0.964 & 0.9916\\ 
+        Gauss($\sigma = 1$) & 0.9713 & 0.9696 & 0.9975 & 0.963 & 0.9663 & 0.9953\\ 
+        Gauss($\sigma = 0.5$) & 0.9615 & 0.9598 & 0.9985 & 0.9567 & 0.9533 & 0.998\\ 
+        \hline
+      \end{tabular}
+      \caption{Test accuracies with different kernels}
+      \label{tab:test_acc_explinear_hinge_kernel}
+    \end{table}
+  \item (1\%) Looking at your tables from above, analyze the results and discuss any findings you may have and the possible reasons behind them. \\
+  Looking at the tables from above we see that the linear kernel for both ExpLinear and Hinge on Model 2 has poor performance in both training and test accuracies. This is likely due to the model not being linearly separable. This is further supported by the results from Kernels Poly($d=2$) and Poly($d = 3$) having higher accuracies (for both ExpLinear and Hinge).\\
+  Second, we see that the training accuracies are 1 for all three models (for both ExpLinear and Hinge) with a Poly($d=3$) kernel. This kernel allows for a non linear model that can fit the data more accurately (e.g., fitting curved boundaries). We also see high accuracies in the test set for the same reason. \\
+  Third, the Gauss($\sigma = 1$) appears to have the best overall accuracy across the board. This is likely due to it's flexibility and it's focus on localized points making it robust to outliers.\\
+  Lastly, we notice that most of the training accuracies are high. This is likely due to the low value of $\lambda = 0.001$, allowing the model to be more complex, and thus fitting the training data better.
+
 \end{enumerate}
 
 \section*{Question 3 (5\%) Binary Classification (SVM Dual Form)}
@@ -153,4 +199,78 @@ standard output.
   \end{center}
   \item (1\%) We will evaluate your choices from (c) on a new test dataset (that you don’t have access to). You will get full mark here if your chosen hyper-parameters, kernel function, dualHinge and dualClassify can achieve acceptable performance on the test dataset.
 \end{enumerate}
+
+\section*{References}
+The following ChatGPT prompt and response was used in this assignment:  \\
+\textbf{Prompt}: \\
+How does the Gaussian kernel with sigma =1 work at a high level  \\[1em]
+\textbf{Response}: \\
+Perfect — let's go step by step through **how the Gaussian (RBF) kernel actually performs classification**, both conceptually and computationally. \\
+--- \\
+1. Goal of kernel-based classification \\
+At the core (e.g., in an **SVM**), the classifier wants to find a **decision boundary** that separates two classes with the **maximum margin**. \\
+For linear data, that's just a straight hyperplane: \\
+$f(x) = w^T x + b$ \\
+and you classify by the **sign** of ( f(x) ). \\
+But when the data are **not linearly separable**, we need to find a boundary in a **higher-dimensional space** where it *is* separable. \\
+2. The kernel trick \\
+Instead of explicitly transforming (x) into a high-dimensional feature space (which could be infinite-dimensional), we use the **kernel trick**: \\
+$K(x_i, x_j) = \exp\left(-\frac{|x_i - x_j|^2}{2\sigma^2}\right)$ \\
+This lets us compute inner products in that feature space **without ever constructing it**. \\
+So the classifier's decision function becomes: \\
+$f(x) = \sum_{i=1}^{N} \alpha_i y_i K(x_i, x) + b$ \\
+where: \\
+\begin{enumerate}
+  \item $(x_i)$ are the **training samples**,
+  \item $(y_i \in {+1, -1})$ are their labels,
+  \item $(\alpha_i)$ are learned weights (nonzero only for **support vectors**),
+  \item $(K(x_i, x))$ measures **similarity** between the new point and each support vector.
+\end{enumerate}
+You classify by taking the **sign** of ( f(x) ): \\
+$\text{class}(x) = \text{sign}(f(x))$ \\
+3. What happens when you classify a new point \\
+When a new input ( x ) arrives: \\
+1. **Compute similarity to each support vector:** \\
+\begin{enumerate}
+  \item If $( x )$ is close to $( x_i )$, $( K(x_i, x) \approx 1 )$.
+  \item If $( x )$ is far, $( K(x_i, x) \approx 0 )$.
+  \item With $\sigma$ = 1, “close” means within roughly one standard deviation in feature space.
+\end{enumerate}
+2. **Weight those similarities by their learned importance:**
+\begin{enumerate}
+  \item Each support vector “votes” for its class, weighted by $( \alpha_i y_i )$.
+  \item Points near the boundary have higher $\sigma$-values — they're the most influential.
+\end{enumerate}
+3. **Sum the votes** to get ( f(x) ).
+\begin{enumerate}
+  \item If the weighted sum is positive → classify as +1
+  \item If negative → classify as -1
+\end{enumerate}
+4. Intuition — “ripples” in feature space \\
+Imagine each **support vector** radiates a **smooth Gaussian bump** of influence over space. \\
+When classifying, you're effectively adding up all those bumps: \\
+\begin{enumerate}
+  \item Points near positive examples raise ( f(x) ).
+  \item Points near negative examples lower ( f(x) ).
+  \item The final decision boundary forms where the sum crosses 0 — the **ridge between the bumps**.
+\end{enumerate}
+Because the Gaussian decays smoothly, the resulting decision boundary is **curved and continuous**, adapting to the data shape. \\
+5. Why this works so well \\
+\begin{enumerate}
+  \item It automatically focuses on **local neighborhoods** (since far-away points have negligible influence).
+  \item It builds a **smooth but nonlinear** decision boundary.
+  \item It requires only a few **support vectors** to represent the learned function.
+  \item It generalizes well because it balances local adaptability with global smoothness (especially when $\sigma$ = 1).
+\end{enumerate}
+Example (conceptually) \\
+Suppose your data look like concentric circles — one class inside, one outside. \\
+A linear classifier can't separate them.\\
+But with the Gaussian kernel: \\
+\begin{enumerate}
+  \item Points inside the same ring are *close* (high similarity).
+  \item Points across rings are *far apart* (low similarity).
+  \item The classifier can now easily draw a **circular decision boundary** in the original space.
+\end{enumerate}
+Would you like me to show you a **visual animation** (or static plot) of how an SVM with a Gaussian kernel classifies points in 2D? It makes this process crystal clear.
+
 \end{document} 
