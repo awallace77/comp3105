@@ -51,7 +51,7 @@ def minExpLinear(X, y, lamb):
     return w, w0
 
 
-# Question 1(b)
+# Question 1 (b)
 def minHinge(X, y, lamb, stabilizer=1e-5):
     """
         This function computes the best model with hinge loss and L2 regularization.
@@ -147,11 +147,206 @@ def synExperimentsRegularize():
     avg_test_acc_hinge = np.mean(test_acc_hinge, axis=2)
     avg_test_acc = np.hstack([avg_test_acc_explinear, avg_test_acc_hinge])
 
-    return avg_test_acc, avg_train_acc
+    return avg_train_acc, avg_test_acc
+
+
+# Question 2: Binary Classification (Adjoint Form)
+# Question 2 (a)
+def adjExpLinear(X, y, lamb, kernel_func):
+    """
+        This function computes the solution of the adjoint form of the regularized ExpLinear loss
+        Args:
+            X: nxd input matrix
+            y: nx1 target vector
+            lamb: regularization hyper-parameter (> 0)
+            kernel_func: a callable kernel function
+        Returns:
+            A tuple of optimal model parameters (a, a0) where a is n-by-1 and a0 is a scalar
+    """
+    n, _ = X.shape
+
+    # Define objective
+    def obj_func(u):
+
+        a0 = u[-1]  # last unknown is a0
+        a = u[:-1]  # the first n dimensions are a
+        a = a[:, None]  # make it n-by-1
+        
+        K = kernel_func(X, X) # kernel matrix
+        m = y * (K.T @ a + a0) # margin
+
+        mask = (m <= 0) # our condition
+        result = np.empty_like(m)
+        result[mask] = 1 - m[mask] # values <=0 are set to 1-m
+        result[~mask] = np.exp(-m[~mask]) # values > 0 are set to e^{-m}
+
+        loss = np.sum(result) # compute the loss
+        reg = 0.5 * lamb * float((a.T @ K @ a)[0][0])
+        
+        return loss + reg
+
+    # Initial guess of unknowns
+    u0 = np.ones(n + 1)  
+
+    sol = minimize(obj_func, u0)  # objective function + initial guess as inputs
+
+    # Get the solution
+    a = sol['x'][:-1][:, None]  # make it n-by-1
+    a0 = sol['x'][-1]
+
+    return a, a0
+
+# Question 2 (b)
+def adjHinge(X, y, lamb, kernel_func, stabilizer=1e-5):
+    """
+        This function computes the solution of the adjoint form of the regularized Hinge loss
+        Args:
+            X: nxd input matrix
+            y: nx1 target vector
+            lamb: regularization hyper-parameter (> 0)
+            kernel_func: a callable kernel function
+            stabilizer: small positive stabilizer added to diagonal of P
+        Returns:
+            A tuple of optimal model parameters (a, a0) where a is n-by-1 and a0 is a scalar
+    """    
+    n, d = X.shape
+    K = kernel_func(X, X)
+
+    # construct P, q, G, and h for qp 
+    q = np.concatenate([np.zeros(n + 1), np.ones(n)])
+    G1 = np.hstack([np.zeros((n, n)), np.zeros((n, 1)), -np.eye(n)])
+    G2 = np.hstack([-np.diag(y.reshape(n,)) @ K, -y, -np.eye(n)])
+    G = np.vstack([G1, G2])
+    h = np.concatenate([np.zeros((n, 1)), -np.ones((n, 1))])
+
+    P = np.zeros((n + 1 + n, n + 1 + n))
+    P[:n, :n] = lamb * K  # only K is regularized
+    P = P + stabilizer * np.eye(2*n + 1)  # add stabilizer
+
+    # Convert to cvx matrices
+    P = matrix(P)
+    q = matrix(q)
+    G = matrix(G)
+    h = matrix(h)
+
+    solvers.options['show_progress'] = False
+    sol = solvers.qp(P, q, G, h)
+    u = np.array(sol['x']).flatten()
+    a = u[:n][:, None] # make it nx1
+    a0 = u[n] 
+
+    return  a, a0
+
+# Question 2 (c)
+def adjClassify(Xtest, a, a0, X, kernel_func):
+    """
+        This function computes the prediction of a given model.
+        Args:
+            Xtest: mxd test matrix 
+            a: nx1 model parameters
+            a0: scalar intercept for model
+            X: nxd training input matrix
+            kernel_func: callable kernel function
+        Returns:
+            A mx1 vector of predictions for the given model 
+    """
+    y_hat = np.sign(kernel_func(Xtest, X) @ a + a0)
+    return y_hat
+
+
+# Question 2 (d)
+def synExperimentsKernel():
+    """
+        This function runs a synthetic experiment for the adjExpLinear and adjHinge, calculating the average training and test accuracies 
+        Returns:
+            A 5x6 matrix of average training accuracies and a 5x6 matrix of average test accuracies 
+    """
+    n_runs = 10
+    n_train = 100
+    n_test = 1000
+    lamb = 0.001
+    kernel_list = [linearKernel,
+        lambda X1, X2: polyKernel(X1, X2, 2),
+        lambda X1, X2: polyKernel(X1, X2, 3),
+        lambda X1, X2: gaussKernel(X1, X2, 1.0),
+        lambda X1, X2: gaussKernel(X1, X2, 0.5)]
+    gen_model_list = [1, 2, 3]
+    train_acc_explinear = np.zeros([len(kernel_list), len(gen_model_list), n_runs])
+    test_acc_explinear = np.zeros([len(kernel_list), len(gen_model_list), n_runs])
+    train_acc_hinge = np.zeros([len(kernel_list), len(gen_model_list), n_runs])
+    test_acc_hinge = np.zeros([len(kernel_list), len(gen_model_list), n_runs])
+    
+    np.random.seed(51)
+    for r in range(n_runs):
+        for i, kernel in enumerate(kernel_list):
+            for j, gen_model in enumerate(gen_model_list):
+                Xtrain, ytrain = generateData(n=n_train, gen_model=gen_model)
+                Xtest, ytest = generateData(n=n_test, gen_model=gen_model)
+
+                a, a0 = adjExpLinear(Xtrain, ytrain, lamb, kernel)
+                train_acc_explinear[i, j, r] = np.mean(ytrain == adjClassify(Xtrain, a, a0, Xtrain, kernel)) 
+                test_acc_explinear[i, j, r] = np.mean(ytest == adjClassify(Xtest, a, a0, Xtrain, kernel)) 
+
+                a, a0 = adjHinge(Xtrain, ytrain, lamb, kernel)
+                train_acc_hinge[i, j, r] = np.mean(ytrain == adjClassify(Xtrain, a, a0, Xtrain, kernel)) 
+                test_acc_hinge[i, j, r] = np.mean(ytest == adjClassify(Xtest, a, a0, Xtrain, kernel)) 
+
+    # Calculate avg training acc for explinear & hinge loss
+    avg_train_acc_explinear = np.mean(train_acc_explinear, axis=2)
+    avg_train_acc_hinge = np.mean(train_acc_hinge, axis=2)
+    avg_train_acc = np.hstack([avg_train_acc_explinear, avg_train_acc_hinge])
+    
+    # Calculate avg test acc for explinear & hinge loss
+    avg_test_acc_explinear = np.mean(test_acc_explinear, axis=2)
+    avg_test_acc_hinge = np.mean(test_acc_hinge, axis=2)
+    avg_test_acc = np.hstack([avg_test_acc_explinear, avg_test_acc_hinge])
+
+    return avg_train_acc, avg_test_acc
 
 if __name__ == "__main__":
 
     # Question 1 (d)
-    synExperimentsRegularize()
+    # avg_train_acc, avg_test_acc = synExperimentsRegularize()
+
+    # Question 2 (a)
+    '''
+    # Checking correctness by comparing to q1 (a) 
+    n = 100
+    lamb = 0.01
+    gen_model = 1
+    kernel_func = lambda X1, X2: linearKernel(X1, X2)
+
+	# Generate data
+    Xtrain, ytrain = generateData(n=n, gen_model=gen_model)
+
+    a, a0 = adjExpLinear(Xtrain, ytrain, lamb, kernel_func)
+    w, w0 = minExpLinear(Xtrain, ytrain, lamb)
+
+    K = kernel_func(Xtrain, Xtrain)
+    exp_linear = Xtrain @ w + w0
+    adj_linear = K @ a + a0
+
+    print(f"EXPLINEAR:\n {exp_linear}")
+    print(f"ADJEXPLINEAR:\n {adj_linear}")
+    '''
+
+    # Question 2 (b)
+    '''
+    # Checking correctness by comparing to q1 (b) 
+    w, w0 = minHinge(Xtrain, ytrain, lamb)
+    a, a0 = adjHinge(Xtrain, ytrain, lamb, kernel_func)
+    
+    hinge = Xtrain @ w + w0
+    adj_hinge = K @ a + a0
+
+    print(f"HINGE:\n {hinge}")
+    print(f"ADJHINGE:\n {adj_hinge}")
+    '''
+    
+    # Question 2 (d)
+    avg_train_acc, avg_test_acc = synExperimentsKernel()
+    print(f"Average TRAIN accuracy:\n{avg_train_acc}")
+    print(f"Average TEST accuracy:\n{avg_test_acc}")
+
 
 
