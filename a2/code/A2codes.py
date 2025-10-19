@@ -417,7 +417,6 @@ def dualHinge(X, y, lamb, kernel_func, stabilizer=1e-5):
             vals = (y[idx_sv, 0] - dec[idx_sv, 0])
             b = float(np.median(vals))
         else:
-            # extreme fallback: pick the largest alpha
             idx = int(np.argmax(a))
             b = float(y[idx, 0] - dec[idx, 0])
 
