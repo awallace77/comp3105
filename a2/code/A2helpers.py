@@ -95,7 +95,7 @@ def getRange(X):
     return x_min, x_max, y_min, y_max
 
 
-def plotModel(X, y, w, w0, classify):
+def plotModel(X, y, w, w0, classify, name=""):
 
     plotPoints(X, y)
 
@@ -111,11 +111,13 @@ def plotModel(X, y, w, w0, classify):
     plt.contourf(xx, yy, z, cmap=plt.cm.RdBu, alpha=0.5)
     plt.legend()
     # plt.show()
-    plt.savefig(f"model{random.random()}.png")
+    plt.savefig(f"model_{name}_{random.random()}.png")
+    plt.clf()  # clears the figure for the next plot
+
     return
 
 
-def plotAdjModel(X, y, a, a0, kernel_func, adjClassify):
+def plotAdjModel(X, y, a, a0, kernel_func, adjClassify, name=""):
 
     plotPoints(X, y)
 
@@ -130,11 +132,13 @@ def plotAdjModel(X, y, a, a0, kernel_func, adjClassify):
     z = z.reshape(xx.shape)
     plt.contourf(xx, yy, z, cmap=plt.cm.RdBu, alpha=0.5)
     plt.legend()
-    plt.show()
+    # plt.show()
+    plt.savefig(f"adj_model_{name}_{random.random()}.png")
+    plt.clf()  # clears the figure for the next plot
     return
 
 
-def plotDualModel(X, y, a, b, lamb, kernel_func, dualClassify):
+def plotDualModel(X, y, a, b, lamb, kernel_func, dualClassify, name=""):
 
     plotPoints(X, y)
 
@@ -150,7 +154,9 @@ def plotDualModel(X, y, a, b, lamb, kernel_func, dualClassify):
     z = z.reshape(xx.shape)
     plt.contourf(xx, yy, z, cmap=plt.cm.RdBu, alpha=0.5)
     plt.legend()
-    plt.show()
+    # plt.show()
+    plt.savefig(f"dual_model_{name}_{random.random()}.png")
+    plt.clf()  # clears the figure for the next plot
 
     return
 
@@ -158,5 +164,7 @@ def plotDualModel(X, y, a, b, lamb, kernel_func, dualClassify):
 def plotDigit(x):
     img = x.reshape((28, 28))
     plt.imshow(img, cmap='gray')
-    plt.show()
+    # plt.show()
+    plt.savefig(f"plotDigit{random.random()}.png")
+    plt.clf()  # clears the figure for the next plot
     return
