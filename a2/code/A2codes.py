@@ -4,7 +4,6 @@ from scipy.optimize import minimize
 from cvxopt import matrix, solvers
 from A2helpers import *
 import pandas as pd
-
 '''
     COMP3105
     Assignment 2
@@ -124,7 +123,7 @@ def synExperimentsRegularize():
     train_acc_hinge = np.zeros([len(lamb_list), len(gen_model_list), n_runs])
     test_acc_hinge = np.zeros([len(lamb_list), len(gen_model_list), n_runs])
 
-    np.random.seed(51)
+    np.random.seed(74)
     for r in range(n_runs):
         for i, lamb in enumerate(lamb_list):
             for j, gen_model in enumerate(gen_model_list):
@@ -166,6 +165,7 @@ def adjExpLinear(X, y, lamb, kernel_func):
             A tuple of optimal model parameters (a, a0) where a is n-by-1 and a0 is a scalar
     """
     n, _ = X.shape
+    K = kernel_func(X, X) # kernel matrix
 
     # Define objective
     def obj_func(u):
@@ -174,7 +174,6 @@ def adjExpLinear(X, y, lamb, kernel_func):
         a = u[:-1]  # the first n dimensions are a
         a = a[:, None]  # make it n-by-1
         
-        K = kernel_func(X, X) # kernel matrix
         m = y * (K.T @ a + a0) # margin
 
         mask = (m <= 0) # our condition
@@ -278,7 +277,7 @@ def synExperimentsKernel():
     train_acc_hinge = np.zeros([len(kernel_list), len(gen_model_list), n_runs])
     test_acc_hinge = np.zeros([len(kernel_list), len(gen_model_list), n_runs])
     
-    np.random.seed(51)
+    np.random.seed(74)
     for r in range(n_runs):
         for i, kernel in enumerate(kernel_list):
             for j, gen_model in enumerate(gen_model_list):
@@ -304,53 +303,6 @@ def synExperimentsKernel():
     avg_test_acc = np.hstack([avg_test_acc_explinear, avg_test_acc_hinge])
 
     return avg_train_acc, avg_test_acc
-
-if __name__ == "__main__":
-
-    # Question 1 (d)
-    # avg_train_acc, avg_test_acc = synExperimentsRegularize()
-
-    # Question 2 (a)
-    '''
-    # Checking correctness by comparing to q1 (a) 
-    n = 100
-    lamb = 0.01
-    gen_model = 1
-    kernel_func = lambda X1, X2: linearKernel(X1, X2)
-
-	# Generate data
-    Xtrain, ytrain = generateData(n=n, gen_model=gen_model)
-
-    a, a0 = adjExpLinear(Xtrain, ytrain, lamb, kernel_func)
-    w, w0 = minExpLinear(Xtrain, ytrain, lamb)
-
-    K = kernel_func(Xtrain, Xtrain)
-    exp_linear = Xtrain @ w + w0
-    adj_linear = K @ a + a0
-
-    print(f"EXPLINEAR:\n {exp_linear}")
-    print(f"ADJEXPLINEAR:\n {adj_linear}")
-    '''
-
-    # Question 2 (b)
-    '''
-    # Checking correctness by comparing to q1 (b) 
-    w, w0 = minHinge(Xtrain, ytrain, lamb)
-    a, a0 = adjHinge(Xtrain, ytrain, lamb, kernel_func)
-    
-    hinge = Xtrain @ w + w0
-    adj_hinge = K @ a + a0
-
-    print(f"HINGE:\n {hinge}")
-    print(f"ADJHINGE:\n {adj_hinge}")
-    '''
-    
-    # Question 2 (d)
-    avg_train_acc, avg_test_acc = synExperimentsKernel()
-    print(f"Average TRAIN accuracy:\n{avg_train_acc}")
-    print(f"Average TEST accuracy:\n{avg_test_acc}")
-
-
 
 
 #Question 3 (a)
@@ -494,8 +446,4 @@ def cvMnist(dataset_folder, lamb_list, kernel_list, k=5):
     best_kernel = kernel_list[best_j]
 
     return avg_acc, best_lamb, best_kernel
-                    
-
-
-
 
