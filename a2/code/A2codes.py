@@ -748,15 +748,28 @@ def dualHinge(X, y, lamb, kernel_func, stabilizer=1e-5):
     a = np.array(solved['x']).reshape(n, 1)
 
     # Intercept term b calculations
-    tolerance = 1e-5
-    if np.any((a > tolerance) & (a < 1-tolerance)):                          
-        idx = int(np.where((a > tolerance) & (a < 1-tolerance))[0][0])
-    else:
-        idx = 0
-    Ki = K[idx:idx+1, :]
+
+    tol = 1e-5
     y_a = y * a
-    decisioni = (1.0/lamb) * float(Ki @ y_a)
-    b = float(y[idx, 0]-decisioni)
+    dec = (1.0 / lamb) * (K @ y_a)              
+
+    # margin SVs: 0 < alpha < 1
+    mask_margin = (a > tol) & (a < 1 - tol)
+    idx_margin = np.where(mask_margin.ravel())[0]
+
+    if idx_margin.size > 0:
+        vals = (y[idx_margin, 0] - dec[idx_margin, 0])
+        b = float(np.median(vals))             
+    else:
+        # fall back to all support vectors alpha > 0
+        idx_sv = np.where((a > tol).ravel())[0]
+        if idx_sv.size > 0:
+            vals = (y[idx_sv, 0] - dec[idx_sv, 0])
+            b = float(np.median(vals))
+        else:
+            # extreme fallback: pick the largest alpha
+            idx = int(np.argmax(a))
+            b = float(y[idx, 0] - dec[idx, 0])
 
     return a, b
 
@@ -833,7 +846,6 @@ def cvMnist(dataset_folder, lamb_list, kernel_list, k=5):
 
     return avg_acc, best_lamb, best_kernel
                     
-
 
 
 
