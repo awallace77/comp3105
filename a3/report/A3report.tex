@@ -1,0 +1,139 @@
+\documentclass[12pt]{article}
+
+\usepackage{fullpage}
+\usepackage{fancybox}
+\usepackage{graphicx}
+\usepackage{amssymb}
+\usepackage{amsmath}
+\usepackage{enumerate}
+\usepackage{float} 
+\usepackage{multirow}
+
+
+%%%%%%%%%%%%%% Capsule %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\newcommand{\capsule}[2]{\vspace{0.5em}
+  \shadowbox{%
+    \begin{minipage}{.90\linewidth}%
+      \textbf{#1:}~#2%
+    \end{minipage}}
+  \vspace{0.5em} }
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\newcounter{ques}
+\newenvironment{question}{\stepcounter{ques}{\noindent\bf Question \arabic{ques}:}}{\vspace{5mm}}
+
+\begin{document} 
+
+\begin{center} \Large\bf
+COMP 3105 -- Assignment 3 Report\\
+-- Fall 2025 -- 
+\end{center} 
+
+\begin{center}
+{\bf Due:} Sunday November 16, 2025 23:59. \\
+Group 51 \\
+Andrew Wallace - 101210291\\
+Christer Henrysson - 101260693\\[1em]
+\end{center}
+\textbf{Getting started} \\
+Note that Python 3.11 is used for this assignment. Please install requirements using virtual environment via: \\
+  \texttt{python3.11 -m venv .venv} \\
+  \texttt{source .venv/bin/activate} \\
+  \texttt{pip install -r requirements.txt}
+\vspace{0.5em}
+\newpage 
+
+\section*{Question 1 (4\%) Linear Multi-Class Classifier}
+\begin{enumerate}[(a)]
+  \item (1\%) Implement a Python function \\
+  \texttt{W = minMulDev(X, Y)} \\
+  Please see \texttt{A3codes.py} for the implementation of \texttt{W = minMulDev(X, Y)}
+  \item (1\%) Implement a Python function \\
+  \texttt{Yhat = classify(Xtest, W)} \\
+  Please see \texttt{A3codes.py} for the implementation of \texttt{Yhat = classify(Xtest, W)}
+  \item (1\%) Implement a Python function \\
+  \texttt{acc = calculateAcc(Yhat, Y)} \\
+  Please see \texttt{A3codes.py} for the implementation of \texttt{acc = calculateAcc(Yhat, Y)}
+  \item (1\%) In this part, you will evaluate your implementation on the synthetic datasets from above.
+  The results from the synthetic classification experiment using seed 101210291 report the following training accuracies:
+  \begin{table}[H]
+    \centering
+    \begin{tabular}{|c|c|c|}
+      \hline
+      $n$ & Model 1 & Model 2 \\
+      \hline
+      16 & 0.94375 & 0.9875 \\
+      32 & 0.8875 & 0.99373\\
+      64 & 0.8703125 & 0.9578125\\
+      128 & 0.85546875 & 0.94296875\\
+      \hline
+    \end{tabular}
+    \caption{Training accuracies with different number of training dataset sizes}
+    \label{tab:q1_classification_training}
+  \end{table}
+  
+  The results from the synthetic classification experiment using seed 101210291 report the following test accuracies:
+  \begin{table}[H]
+    \centering
+    \begin{tabular}{|c|c|c|}
+      \hline
+      $n$ & Model 1 & Model 2 \\
+      \hline
+      16 & 0.72 & 0.8755 \\
+      32 & 0.8016 & 0.901\\
+      64 & 0.8246 & 0.9007\\
+      128 & 0.8368 & 0.9168\\
+      \hline
+    \end{tabular}
+    \caption{Test accuracies with different number of training dataset sizes}
+    \label{tab:q1_classification_test}
+  \end{table}
+
+  \[
+    W^* = \text{argmin}_W \in \mathbb{R}^{d \times k} \frac{1}{n} \sum_{i = 1}^{n} \log(1_{k}^\text{T} \exp^{W^T x_i}) - y_i^\text{T} W^\text{T} x_i
+  \]  
+\end{enumerate}
+
+\section*{Question 2 (7\%) Principle Component Analysis}
+\begin{enumerate}[(a)]
+  \item (1\%) Implement a Python function \\
+  \texttt{U = PCA(X, k)}
+  \item (0.5\%) Implement a Python function \\
+  \texttt{Xproj = projPCA(Xtest, mu, U)}
+  \item (2\%) Implement a Python function \\
+  \texttt{A = kernelPCA(X, k, kernel func)}
+  \item (2\%) Implement a Python function \\
+  \texttt{Xproj = projKernelPCA(Xtest, Xtrain, kernel func, A)}
+  \item (1\%) In this part, you will evaluate your implementation on the synthetic datasets from above.
+  \item (0.5\%) Looking at your tables from above, analyze the results and discuss any findings you may have and the possible reason behind them.
+\end{enumerate}
+
+\section*{Question 3 (4\%) $k$-means}
+\begin{enumerate}[(a)]
+  \item (1\%) Implement a Python function \\
+  \texttt{Y, U, obj val = kmeans(X, k, max iter=1000)}
+  \item (1\%) Implement a Python function \\
+  \texttt{Y, U, obj val = repeatKmeans(X, k, n runs=100)}
+  \item (1\%) Implement a Python function \\
+  \texttt{obj val list = chooseK(X, k candidates=[2,3,4,5,6,7,8,9])}
+  \item (2\%) Implement a Python function \\
+  \texttt{Xproj = projKernelPCA(Xtest, Xtrain, kernel func, A)}
+\end{enumerate}
+
+\section*{References}
+ \begin{table}[H]
+    \centering
+    \begin{tabular}{|c|c|c|c|}
+      \hline
+      $\lambda$ & Linear & Poly($d{=}2$) & Gauss($\sigma{=}1.0$) \\
+      \hline
+      0.001 & 0.958 & \textbf{0.978} & 0.493 \\
+      0.01  & 0.958 & \textbf{0.978} & 0.493 \\
+      0.1   & 0.958 & \textbf{0.978} & 0.493 \\
+      \hline
+    \end{tabular}
+    \caption{Q3(c) average validation accuracies for MNIST (4 vs 9). Best setting: $\lambda{=}0.001$, Poly($d{=}2$).}
+    \label{tab:q3_cv}
+    \end{table}
+
+\end{document} 
