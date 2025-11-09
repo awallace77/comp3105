@@ -1,6 +1,7 @@
 import numpy as np
 from scipy.optimize import minimize
 from scipy.special import logsumexp
+from scipy.linalg import eigh
 from cvxopt import matrix, solvers
 from A3helpers import *
 import pandas as pd
@@ -82,6 +83,22 @@ def calculateAcc(Yhat, Y):
 
 
 ### QUESTION 2
+def PCA(X, k):
+    """
+        Calculates the top k projecting vectors for dimensionality reduction
+        Args:
+            X: n-by-d input matrix
+            k: scalar integer 1 <= k <= d
+        Returns:
+            k-by-d matrix of rows corresponding to the top-k projecting directions with the largest variances.
+    """
+    n, d = X.shape
+    mean = np.mean(X, axis=0).reshape(d, 1)
+    X = (X - (mean.T * np.ones(X.shape)))
+    eigen_values, eigen_vectors = eigh(X.T @ X, subset_by_index=[d - k, d - 1])
+    U = np.array((eigen_vectors).T)
+
+    return U
 
 if __name__ == "__main__":
 
@@ -106,26 +123,21 @@ if __name__ == "__main__":
         [0, 1]
     ])
 
-    
-
     W = minMulDev(X, Y)
     classify(X, W)
-
-
     print(calculateAcc(Yhat, Y))
 
-    # [ W.T x_1  W.T x_2 ... ]
-    # n = 2
-    # # WtX = (W.T @ X.T)
-    # WtX = (X @ W).T 
-    # YWtXt = (Y @ W.T @ X.T)
-    # print(WtX)
-    # print(YWtXt)
-    # first_term = np.sum(logsumexp(WtX, axis=0))
-    # second_term = np.trace(YWtXt)
-    # loss = (first_term - second_term) / n
+    X = np.array([
+        [1, 2, 3],
+        [4, 5, 6]
+    ])
+    # U = PCA(X, 3)
+    # print(U)
 
-    # print(f"First Term: {first_term}")
-    # print(f"Second Term: {second_term}")
-    # print(f"Res: {loss}")
+
+    data_matrix = np.loadtxt('./a3/src/A3train.csv', delimiter=',')
+    n, d = data_matrix.shape
+    U = PCA(data_matrix, 3)
+    plotImgs(U)
+    
 
