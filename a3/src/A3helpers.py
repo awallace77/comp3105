@@ -116,7 +116,7 @@ def getRange(X):
     return x_min, x_max, y_min, y_max
 
 
-def plotModel(X, Y, W, classify):
+def plotModel(X, Y, W, classify, name=""):
 
     X = unAugmentX(X)
     plotPoints(X, Y)
@@ -136,7 +136,7 @@ def plotModel(X, Y, W, classify):
                  alpha=0.3)
     plt.legend()
     # plt.show()  
-    plt.savefig(f"model.png")
+    plt.savefig(f"{name}.png")
     plt.clf()  # clears the figure for the next plot
     return
 
