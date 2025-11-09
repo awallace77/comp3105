@@ -9,9 +9,11 @@ import pandas as pd
     COMP3105 Assignment 3
     Group 51:
         Andrew Wallace - 101210291
+        Christer Henrysson - 101260693
     Due: November 16th, 2025
 '''
 
+### QUESTION 1
 def minMulDev(X, Y):
     """
         Computes the optimal weights using multinomial deviance loss
@@ -77,6 +79,9 @@ def calculateAcc(Yhat, Y):
     acc = num_correct / m
 
     return acc
+
+
+### QUESTION 2
 
 if __name__ == "__main__":
 
