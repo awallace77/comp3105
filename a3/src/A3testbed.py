@@ -70,6 +70,8 @@ if __name__ == "__main__":
 
 	print(f"Training acc:\n{train_acc}")
 	print(f"Test acc:\n{test_acc}")
+
+
 	# _testPCA()
 	# _plotKmeans()
 	# _plotKernelKmeans()
