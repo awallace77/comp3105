@@ -13,16 +13,17 @@ from A3helpers import augmentX, gaussKernel, plotModel, generateData, plotPoints
 def _plotCls():
 
 	n = 100
+	model = 2
 
 	# Generate data
-	Xtrain, Ytrain = generateData(n=n, gen_model=2)
+	Xtrain, Ytrain = generateData(n=n, gen_model=model)
 	Xtrain = augmentX(Xtrain)
 
 	# Learn and plot results
 	W = A3codes.minMulDev(Xtrain, Ytrain)
 	print(f"Train accuaracy {A3codes.calculateAcc(Ytrain, A3codes.classify(Xtrain, W))}")
 
-	plotModel(Xtrain, Ytrain, W, A3codes.classify)
+	plotModel(Xtrain, Ytrain, W, A3codes.classify, f"cls_train{model}")
 
 	return
 

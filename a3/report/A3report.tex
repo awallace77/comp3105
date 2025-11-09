@@ -32,8 +32,8 @@ COMP 3105 -- Assignment 3 Report\\
 \begin{center}
 {\bf Due:} Sunday November 16, 2025 23:59. \\
 Group 51 \\
-Andrew Wallace - 101210291\\
-Christer Henrysson - 101260693\\[1em]
+Andrew Wallace - 101210291\\[1em]
+% Christer Henrysson - 101260693\\[1em]
 \end{center}
 \textbf{Getting started} \\
 Note that Python 3.11 is used for this assignment. Please install requirements using virtual environment via: \\
@@ -92,6 +92,8 @@ Note that Python 3.11 is used for this assignment. Please install requirements u
   \[
     W^* = \text{argmin}_W \in \mathbb{R}^{d \times k} \frac{1}{n} \sum_{i = 1}^{n} \log(1_{k}^\text{T} \exp^{W^T x_i}) - y_i^\text{T} W^\text{T} x_i
   \]  
+  Our results show that the training for our linear classifier is less accurate for data generated with data model 1 compared to data generated with model 2. This is because the data in model 1 has more overlap compared to model 2. This makes the data classes more difficult to linearly separate. We also see a trend towards lower accuracies as the number of data points increases. Again, this is possibly due to the difficulty of linearly separating classes when there is more overlapping data points that belong to different classes. 
+  However, this reduces overfitting in the learned classifier, generalizing better to the test dataset. That is, as the number of data points increases in the test dataset, the accuracies increase due to this generalization in the classifier.
 \end{enumerate}
 
 \section*{Question 2 (7\%) Principle Component Analysis}
