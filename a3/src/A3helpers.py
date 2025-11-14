@@ -6,7 +6,7 @@ import numpy as np
 from scipy.spatial.distance import cdist
 from matplotlib import pyplot as plt
 
-np.random.seed(101210291)  # <<< makes all random generation reproducible
+np.random.seed(51)  # <<< makes all random generation reproducible
 
 def augmentX(X):
     n = X.shape[0]
@@ -176,11 +176,13 @@ def plotImg(x):
     return
 
 
-def plotImgs(X):
+def plotImgs(X, name="plotImgs"):
     # plot the first 20 images of X
     fig = plt.figure(figsize=(16, 6))
     for i in range(20):
         ax = fig.add_subplot(3, 10, i + 1, xticks=[], yticks=[])
         ax.imshow(X[i].reshape((28, 28)), cmap='gray')
-    plt.show()
+    # plt.show()
+    plt.savefig(f"{name}.png")
+    plt.clf()  # clears the figure for the next plot
     return

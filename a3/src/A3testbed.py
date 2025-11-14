@@ -27,6 +27,12 @@ def _plotCls():
 
 	return
 
+def _testCls():	
+	train_acc, test_acc = synClsExperiments(minMulDev=A3codes.minMulDev, classify=A3codes.classify, calculateAcc=A3codes.calculateAcc)
+	print("Train accuracy: \n", train_acc)
+	print("Test accuracy: \n", test_acc)
+
+
 
 def _testPCA():
 	train_acc, test_acc = A3codes.synClsExperimentsPCA()
@@ -66,12 +72,7 @@ def _plotKernelKmeans():
 if __name__ == "__main__":
 
 	_plotCls()
-	train_acc, test_acc = synClsExperiments(minMulDev=A3codes.minMulDev, classify=A3codes.classify, calculateAcc=A3codes.calculateAcc)
-
-	print(f"Training acc:\n{train_acc}")
-	print(f"Test acc:\n{test_acc}")
-
-
-	# _testPCA()
+	_testCls()
+	_testPCA()
 	# _plotKmeans()
 	# _plotKernelKmeans()

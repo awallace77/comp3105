@@ -62,10 +62,10 @@ Note that Python 3.11 is used for this assignment. Please install requirements u
       \hline
       $n$ & Model 1 & Model 2 \\
       \hline
-      16 & 0.94375 & 0.9875 \\
-      32 & 0.8875 & 0.99373\\
-      64 & 0.8703125 & 0.9578125\\
-      128 & 0.85546875 & 0.94296875\\
+      16 & 0.93125 & 1 \\
+      32 & 0.88125 & 0.984375 \\
+      64 & 0.86875 & 0.9609375\\
+      128 & 0.85390625 & 0.94296875\\
       \hline
     \end{tabular}
     \caption{Training accuracies with different number of training dataset sizes}
@@ -79,10 +79,10 @@ Note that Python 3.11 is used for this assignment. Please install requirements u
       \hline
       $n$ & Model 1 & Model 2 \\
       \hline
-      16 & 0.72 & 0.8755 \\
-      32 & 0.8016 & 0.901\\
-      64 & 0.8246 & 0.9007\\
-      128 & 0.8368 & 0.9168\\
+      16 & 0.7317 & 0.8963\\
+      32 & 0.7928& 0.8857\\
+      64 & 0.8228& 0.8976\\
+      128 & 0.844& 0.9178\\
       \hline
     \end{tabular}
     \caption{Test accuracies with different number of training dataset sizes}
@@ -99,14 +99,49 @@ Note that Python 3.11 is used for this assignment. Please install requirements u
 \section*{Question 2 (7\%) Principle Component Analysis}
 \begin{enumerate}[(a)]
   \item (1\%) Implement a Python function \\
-  \texttt{U = PCA(X, k)}
+  \texttt{U = PCA(X, k)} \\
+  Please see \texttt{A3codes.py} for the implementation of \texttt{PCA(X, k)}
   \item (0.5\%) Implement a Python function \\
-  \texttt{Xproj = projPCA(Xtest, mu, U)}
+  \texttt{Xproj = projPCA(Xtest, mu, U)}\\
+  Please see \texttt{A3codes.py} for the implementation of \texttt{projPCA(Xtest, mu, U)}
   \item (2\%) Implement a Python function \\
-  \texttt{A = kernelPCA(X, k, kernel func)}
+  \texttt{A = kernelPCA(X, k, kernel func)}\\
+  Please see \texttt{A3codes.py} for the implementation of \texttt{kernelPCA(X, k, kernel func)}
   \item (2\%) Implement a Python function \\
-  \texttt{Xproj = projKernelPCA(Xtest, Xtrain, kernel func, A)}
-  \item (1\%) In this part, you will evaluate your implementation on the synthetic datasets from above.
+  \texttt{Xproj = projKernelPCA(Xtest, Xtrain, kernel func, A)}\\
+  Please see \texttt{A3codes.py} for the implementation of \texttt{projKernelPCA(Xtest, Xtrain, kernel func, A)}
+  \item (1\%) In this part, you will evaluate your implementation on the synthetic datasets from above. Implement a Python function\\
+  \texttt{train\_acc, test\_acc = synClsExperimentsPCA()}\\
+  Please see \texttt{A3codes.py} for the implementation of \texttt{synClsExperimentsPCA()} \\
+  The results from the synthetic PCA classification experiment using seed 51 report the following training accuracies:
+  \begin{table}[H]
+    \centering
+    \begin{tabular}{|c|c|c|}
+      \hline
+      Dim $k$ & Model 1 & Model 2 \\
+      \hline
+      1 & 0.8503125 & 0.64242188\\
+      2 & 0.85789063 & 0.94179687 \\
+      \hline
+    \end{tabular}
+    \caption{Training accuracies for PCA classification with different dimension sizes}
+    \label{tab:q2_classification_training}
+  \end{table}
+  
+  The results from the synthetic PCA classification experiment using seed 51 report the following test accuracies:
+  \begin{table}[H]
+    \centering
+    \begin{tabular}{|c|c|c|}
+      \hline
+      Dim $k$ & Model 1 & Model 2 \\
+      \hline
+      1 & 0.84541 & 0.63417 \\
+      2 & 0.83993 & 0.91801 \\
+      \hline
+    \end{tabular}
+    \caption{Test accuracies for PCA classification with different dimension sizes}
+    \label{tab:q2_classification_test}
+  \end{table}
   \item (0.5\%) Looking at your tables from above, analyze the results and discuss any findings you may have and the possible reason behind them.
 \end{enumerate}
 
