@@ -5,6 +5,7 @@ from scipy.linalg import eigh
 from cvxopt import matrix, solvers
 from A3helpers import *
 import pandas as pd
+import random as rand
 
 '''
     COMP3105 Assignment 3
@@ -306,3 +307,72 @@ if __name__ == "__main__":
     print(f"train_acc:\n{train_acc}")
     print(f"test_acc:\n{test_acc}")
 
+
+# Question 3a
+def kmeans(X, k, max_iter=1000):
+    n, d = X.shape
+    assert max_iter > 0 and k < n
+    # U is found by picking k random points from X to be the center points
+    U = X[np.random.choice(X.shape[0], k, replace=False), :]
+
+    for i in range(max_iter):
+        Y = np.zeros((n,k))
+        D = np.zeros((n,k))
+        
+        # Caclulate Y by looking for the closest U center for each X data point
+        for x in range(X.shape[0]):
+            min_D = np.inf
+            min_cluster = -1
+            for j in range(U.shape[0]):
+                D[x, j] = np.linalg.norm(X[x] - U[j])
+                if D[x,j] < min_D: 
+                    min_cluster = j
+                    min_D = D[x,j]
+            Y[x] = 0
+            Y[x,min_cluster] = 1 #Find the new cluster assignments
+
+        old_U = U.copy()
+        #find the mean of all the clusters and that is new cluster center for Uj
+        U = np.zeros((k,d))
+        for j in range(k):
+            cluster_points = X[Y[:,j]==1]
+            
+            if cluster_points.shape[0] > 0:
+                U[j] = cluster_points.mean(axis=0)
+            else: #if cluster has no points:
+                U[j] = old_U[j]   # keep old center
+
+
+        if np.allclose(old_U, U):
+            break
+    obj_val = (0.5 / n) * np.sum(D.min(axis=1))
+    return Y, U, obj_val
+
+# Question 3b 
+def repeatKmeans(X, k, n_runs=100):
+    best_obj_val = float('inf')
+    best_Y = None
+    best_U = None
+    for r in range(n_runs):
+        Y, U, obj_val = kmeans(X, k)
+        #if obj_val is smallest then keep that one
+        if obj_val<best_obj_val:
+            best_obj_val = obj_val
+            best_Y = Y
+            best_U = U
+    #return Y and U of smallest Object Value
+    return(best_Y,best_U,best_obj_val)
+
+#Question 3c
+def chooseK(X, k_candidates=[2,3,4,5,6,7,8,9]):
+    list_obj_val = []
+    for k in k_candidates:
+        Y, U, obj_val = repeatKmeans(X,k)
+        list_obj_val.append(obj_val)
+    return(list_obj_val)
+
+# Question 3c testing
+print("QUESTION 3C")
+Xtrain, Ytrain = generateData(n=100, gen_model=2)
+obj_val_list = chooseK(Xtrain)
+print(f"test_acc:\n{obj_val_list}")
