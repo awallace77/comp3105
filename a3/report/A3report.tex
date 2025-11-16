@@ -149,29 +149,29 @@ Note that Python 3.11 is used for this assignment. Please install requirements u
 \section*{Question 3 (4\%) $k$-means}
 \begin{enumerate}[(a)]
   \item (1\%) Implement a Python function \\
-  \texttt{Y, U, obj val = kmeans(X, k, max iter=1000)}
+  \texttt{Y, U, obj\_val = kmeans(X, k, max iter=1000)}\\
+  Please see \texttt{A3codes.py} for the implementation of \texttt{kmeans(X, k, max iter=1000)}
   \item (1\%) Implement a Python function \\
-  \texttt{Y, U, obj val = repeatKmeans(X, k, n runs=100)}
+  \texttt{Y, U, obj\_val = repeatKmeans(X, k, n runs=100)}\\
+  Please see \texttt{A3codes.py} for the implementation of \texttt{repeatKmeans(X, k, n runs=100)}
   \item (1\%) Implement a Python function \\
-  \texttt{obj val list = chooseK(X, k candidates=[2,3,4,5,6,7,8,9])}
-  \item (2\%) Implement a Python function \\
-  \texttt{Xproj = projKernelPCA(Xtest, Xtrain, kernel func, A)}
-\end{enumerate}
-
-\section*{References}
- \begin{table}[H]
+  \texttt{obj\_val, list = chooseK(X, k candidates=[2,3,4,5,6,7,8,9])} \\
+  Please see \texttt{A3codes.py} for the implementation of \texttt{chooseK(X, k candidates=[2,3,4,5,6,7,8,9])}
+  \begin{table}[H]
     \centering
-    \begin{tabular}{|c|c|c|c|}
+    \begin{tabular}{|c|c|c|c|c|c|c|c|c|}
       \hline
-      $\lambda$ & Linear & Poly($d{=}2$) & Gauss($\sigma{=}1.0$) \\
+      $k$ & 2 & 3 & 4 & 5 & 6 & 7 & 8 & 9 \\
       \hline
-      0.001 & 0.958 & \textbf{0.978} & 0.493 \\
-      0.01  & 0.958 & \textbf{0.978} & 0.493 \\
-      0.1   & 0.958 & \textbf{0.978} & 0.493 \\
+      \texttt{obj\_val} & 2.7363 & 1.6877 & 1.0105 & 0.8407 & 0.7095 & 0.5935 & 0.5062 & 0.4314\\
       \hline
     \end{tabular}
-    \caption{Q3(c) average validation accuracies for MNIST (4 vs 9). Best setting: $\lambda{=}0.001$, Poly($d{=}2$).}
-    \label{tab:q3_cv}
-    \end{table}
-
+    \caption{Objective values for different $k$}
+    \label{tab:q3_objective_values}
+  \end{table}
+  Based on the list of objective values, it seems like the largest drop happens from $k = 2$ and $k = 4$. Everything after that has minimal returns. Therefore, the best $k$ is $k=4$.
+  \item (2\%) Implement a Python function \\
+  \texttt{Y, obj\_val = kernelKmeans(X, kernel\_func, k, init\_Y, max\_iter=1000)} \\
+  Please see \texttt{A3codes.py} for the implementation of \texttt{kernelKmeans(X, kernel\_func, k, init\_Y, max\_iter=1000)} \\
+\end{enumerate}
 \end{document} 

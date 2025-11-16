@@ -2,11 +2,6 @@ import numpy as np
 from scipy.optimize import minimize
 from scipy.special import logsumexp
 from scipy.linalg import eigh
-from cvxopt import matrix, solvers
-from A3helpers import *
-import pandas as pd
-import random as rand
-
 '''
     COMP3105 Assignment 3
     Group 51:
@@ -15,7 +10,7 @@ import random as rand
     Due: November 16th, 2025
 '''
 
-### QUESTION 1
+# QUESTION 1
 def minMulDev(X, Y):
     """
         Computes the optimal weights using multinomial deviance loss
@@ -37,13 +32,6 @@ def minMulDev(X, Y):
         scores = X @ W
         first_term = np.sum(logsumexp(scores, axis=1))
         second_term = np.sum(Y * scores)
-        '''
-        weights_inputs = (X @ W).T 
-        labels_weights_inputs = (Y @ W.T @ X.T)
-
-        first_term = np.sum(logsumexp(weights_inputs, axis=0))
-        second_term = np.trace(labels_weights_inputs)
-        '''
         loss = (first_term - second_term) / n
         return loss
     
@@ -66,7 +54,8 @@ def classify(Xtest, W):
             m-by-k predication matrix
     """
 
-    Z = Xtest @ W          # (m,k)
+    # Scores
+    Z = Xtest @ W 
     m, k = Z.shape
 
     # Get index with largest value
@@ -94,7 +83,7 @@ def calculateAcc(Yhat, Y):
     return acc
 
 
-### QUESTION 2
+# QUESTION 2
 def PCA(X, k):
     """
         Calculates the top k projecting vectors for dimensionality reduction
@@ -158,7 +147,7 @@ def kernelPCA(X, k, kernel_func):
     eigen_values= eigen_values[-k:]
     eigen_vectors = eigen_vectors[:, -k:]
 
-    # Rescale by 1/lambda n
+    # Rescale by sqrt 1/lambda n
     A = eigen_vectors / np.sqrt(eigen_values)
 
     # Each row is an eigen vector (k-by-n) in descending order
@@ -213,7 +202,7 @@ def synClsExperimentsPCA():
     train_acc = np.zeros([len(dim_list), len(gen_model_list), n_runs])
     test_acc = np.zeros([len(dim_list), len(gen_model_list), n_runs])
 
-    # DONE: Change the following random seed to your GROUP number (<=3digits)
+    # Change the following random seed to your GROUP number (<=3digits)
     np.random.seed(51)
 
     for r in range(n_runs):
@@ -222,8 +211,8 @@ def synClsExperimentsPCA():
                 Xtrain, Ytrain = generateData(n=n_train, gen_model=gen_model)
                 Xtest, Ytest = generateData(n=n_test, gen_model=gen_model)
                 U = PCA(Xtrain, k)
-                Xtrain_proj = projPCA(Xtrain, np.mean(Xtrain, axis=0)[:, None], U) # DONE: call your projPCA to find the new features
-                Xtest_proj = projPCA(Xtest, np.mean(Xtest, axis=0)[:, None], U) # DONE: call your projPCA to find the new features
+                Xtrain_proj = projPCA(Xtrain, np.mean(Xtrain, axis=0)[:, None], U) # call your projPCA to find the new features
+                Xtest_proj = projPCA(Xtest, np.mean(Xtest, axis=0)[:, None], U) # call your projPCA to find the new features
                 Xtrain_proj = augmentX(Xtrain_proj) # add augmentation
                 Xtest_proj = augmentX(Xtest_proj)
                 W = minMulDev(Xtrain_proj, Ytrain) # from Q1
@@ -342,8 +331,6 @@ def chooseK(X, k_candidates=[2,3,4,5,6,7,8,9]):
     return(list_obj_val)
 
 
-
-
 # Question 3d
 def kernelKmeans(X, kernel_func, k, init_Y, max_iter=1000):
     """
@@ -401,6 +388,9 @@ def kernelKmeans(X, kernel_func, k, init_Y, max_iter=1000):
     obj_val = (0.5 / n) * np.sum(D.min(axis=1))
     return Y, obj_val
 
+
+''' NOTE: UNCOMMENT FOR LOCAL TESTING'''
+'''
 if __name__ == "__main__":
 
     # Question 1 testing
@@ -474,4 +464,4 @@ if __name__ == "__main__":
     Xtrain, Ytrain = generateData(n=100, gen_model=2)
     obj_val_list = chooseK(Xtrain)
     print(f"test_acc:\n{obj_val_list}")
-
+'''
