@@ -367,7 +367,6 @@ def kernelKmeans(X, kernel_func, k, init_Y, max_iter=1000):
     K = kernel_func(X, X)
     Y = init_Y
 
-
     #the diagonal of K
     Kii = np.diag(K)
 
@@ -379,7 +378,6 @@ def kernelKmeans(X, kernel_func, k, init_Y, max_iter=1000):
             #indexs of the points curretly assigned to this cluster
             idx_j = np.where(Y[:,j] == 1)[0]
             n_j = len(idx_j)
-
 
             #just incase cluster is empty, we set distance to infinite so it wont be chosen
             if n_j == 0:
