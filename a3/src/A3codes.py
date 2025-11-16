@@ -365,10 +365,11 @@ def kernelKmeans(X, kernel_func, k, init_Y, max_iter=1000):
 
     #compute the kernel matrix
     K = kernel_func(X, X)
-    Y = init_Y
 
     #the diagonal of K
     Kii = np.diag(K)
+
+    Y = init_Y
 
     for i in range(max_iter):
         D = np.zeros((n,k))
@@ -387,7 +388,7 @@ def kernelKmeans(X, kernel_func, k, init_Y, max_iter=1000):
             #this is the kernel k-mean distance formula
             D[:, j] = Kii - (2.0/n_j)*np.sum(K[:,idx_j], axis = 1) + (1.0/n_j**2)*np.sum(K[np.ix_(idx_j, idx_j)])
         
-        old_Y = Y.copy()
+        old_Y = Y
 
         min_cluster = np.argmin(D, axis=1)
 
