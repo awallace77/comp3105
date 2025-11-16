@@ -239,6 +239,168 @@ def synClsExperimentsPCA():
     # return 2-by-2 train accuracy and 2-by-2 test accuracy
     return train_acc, test_acc
 
+
+# Question 3a
+def kmeans(X, k, max_iter=1000):
+    """
+    Runs the standard k means algorithm.
+
+    Args:
+        X: input data matrix
+        k: scalar integer specifying the number of clusters
+        max_iter: maximum number of iterations to perform
+
+    Returns:
+        Y: assignment data point to cluster matrix 
+        U: matrix of cluster centers
+        obj_val: scalar objective value corresponding to the final clustering
+    """
+    n, d = X.shape
+    assert max_iter > 0 and k < n
+    # U is found by picking k random points from X to be the center points
+    U = X[np.random.choice(X.shape[0], k, replace=False), :]
+
+    for i in range(max_iter):
+        Y = np.zeros((n,k))
+        D = np.zeros((n,k))
+        
+        # Caclulate Y by looking for the closest U center for each X data point
+        for x in range(X.shape[0]):
+            min_D = np.inf
+            min_cluster = -1
+            for j in range(U.shape[0]):
+                D[x, j] = np.linalg.norm(X[x] - U[j])
+                if D[x,j] < min_D: 
+                    min_cluster = j
+                    min_D = D[x,j]
+            Y[x] = 0
+            Y[x,min_cluster] = 1 #Find the new cluster assignments
+
+        old_U = U
+        #find the mean of all the clusters and that is new cluster center for Uj
+        U = np.zeros((k,d))
+        for j in range(k):
+            cluster_points = X[Y[:,j]==1]
+            
+            if cluster_points.shape[0] > 0:
+                U[j] = cluster_points.mean(axis=0)
+            else: #if cluster has no points:
+                U[j] = old_U[j]   # keep old center
+
+
+        if np.allclose(old_U, U):
+            break
+    obj_val = (0.5 / n) * np.sum(D.min(axis=1))
+    return Y, U, obj_val
+
+# Question 3b 
+def repeatKmeans(X, k, n_runs=100):
+    """
+    Repeats k means multiple times with different random initializations and returns the clustering with the smallest objective value
+
+    Args:
+        X: input data matrix
+        k: scalar integer specifying the number of clusters
+        n_runs: number of times to re run k means with different intial cluster centers
+
+    Returns:
+        best_Y: assignment data point to cluster matrix with the smallest k mean objective value
+        best_U: matrix of cluster centers coresponding to best_Y
+        best_obj_val: smallest scalar objective value achieved over all runs
+    """
+    best_obj_val = float('inf')
+    best_Y = None
+    best_U = None
+    for r in range(n_runs):
+        Y, U, obj_val = kmeans(X, k)
+        #if obj_val is smallest then keep that one
+        if obj_val<best_obj_val:
+            best_obj_val = obj_val
+            best_Y = Y
+            best_U = U
+    #return Y and U of smallest Object Value
+    return(best_Y,best_U,best_obj_val)
+
+#Question 3c
+def chooseK(X, k_candidates=[2,3,4,5,6,7,8,9]):
+    """
+    Tests the k means fucntion for a list of candidate k values using repeated k means for each k.
+
+    Args:
+        X: input data matrix.
+        k_candidates: list of candidate integers for the number of clusters.
+
+    Returns:
+        list_obj_val: list of scalar objective values, where the ith entry is the best k means objective value obtained for
+        k = k_candidates[i].
+    """
+    list_obj_val = []
+    for k in k_candidates:
+        Y, U, obj_val = repeatKmeans(X,k)
+        list_obj_val.append(obj_val)
+    return(list_obj_val)
+
+
+
+
+# Question 3d
+def kernelKmeans(X, kernel_func, k, init_Y, max_iter=1000):
+    """
+    Runs kernel k means given an initial cluster assignment.
+
+    Args:
+        X: input data matrix.
+        kernel_func: callable kernel function that takes two matrices (X1, X2) and returns the n1 by n2 kernel matrix K(X1, X2)
+        k: scalar integer specifying the number of clusters
+        init_Y: initial assignment data point to cluster matrix 
+        max_iter: maximum number of kernel k means iterations to perform
+
+    Returns:
+        Y: assignment data point to cluster matrix 
+        obj_val: scalar objective value corresponding to the final clustering
+    """
+    n, d = X.shape
+    assert max_iter > 0 and k < n
+
+    #compute the kernel matrix
+    K = kernel_func(X, X)
+    Y = init_Y
+
+
+    #the diagonal of K
+    Kii = np.diag(K)
+
+    for i in range(max_iter):
+        D = np.zeros((n,k))
+
+        #compute the distances for each cluster j
+        for j in range(k):
+            #indexs of the points curretly assigned to this cluster
+            idx_j = np.where(Y[:,j] == 1)[0]
+            n_j = len(idx_j)
+
+
+            #just incase cluster is empty, we set distance to infinite so it wont be chosen
+            if n_j == 0:
+                D[: , j] = np.inf
+                continue
+            
+            #this is the kernel k-mean distance formula
+            D[:, j] = Kii - (2.0/n_j)*np.sum(K[:,idx_j], axis = 1) + (1.0/n_j**2)*np.sum(K[np.ix_(idx_j, idx_j)])
+        
+        old_Y = Y.copy()
+
+        min_cluster = np.argmin(D, axis=1)
+
+        Y = np.zeros((n,k))
+        Y[np.arange(n),min_cluster] = 1
+
+        if np.allclose(old_Y, Y):
+            break
+
+    obj_val = (0.5 / n) * np.sum(D.min(axis=1))
+    return Y, obj_val
+
 if __name__ == "__main__":
 
     # Question 1 testing
@@ -307,72 +469,9 @@ if __name__ == "__main__":
     print(f"train_acc:\n{train_acc}")
     print(f"test_acc:\n{test_acc}")
 
+    # Question 3c testing
+    print("QUESTION 3C")
+    Xtrain, Ytrain = generateData(n=100, gen_model=2)
+    obj_val_list = chooseK(Xtrain)
+    print(f"test_acc:\n{obj_val_list}")
 
-# Question 3a
-def kmeans(X, k, max_iter=1000):
-    n, d = X.shape
-    assert max_iter > 0 and k < n
-    # U is found by picking k random points from X to be the center points
-    U = X[np.random.choice(X.shape[0], k, replace=False), :]
-
-    for i in range(max_iter):
-        Y = np.zeros((n,k))
-        D = np.zeros((n,k))
-        
-        # Caclulate Y by looking for the closest U center for each X data point
-        for x in range(X.shape[0]):
-            min_D = np.inf
-            min_cluster = -1
-            for j in range(U.shape[0]):
-                D[x, j] = np.linalg.norm(X[x] - U[j])
-                if D[x,j] < min_D: 
-                    min_cluster = j
-                    min_D = D[x,j]
-            Y[x] = 0
-            Y[x,min_cluster] = 1 #Find the new cluster assignments
-
-        old_U = U.copy()
-        #find the mean of all the clusters and that is new cluster center for Uj
-        U = np.zeros((k,d))
-        for j in range(k):
-            cluster_points = X[Y[:,j]==1]
-            
-            if cluster_points.shape[0] > 0:
-                U[j] = cluster_points.mean(axis=0)
-            else: #if cluster has no points:
-                U[j] = old_U[j]   # keep old center
-
-
-        if np.allclose(old_U, U):
-            break
-    obj_val = (0.5 / n) * np.sum(D.min(axis=1))
-    return Y, U, obj_val
-
-# Question 3b 
-def repeatKmeans(X, k, n_runs=100):
-    best_obj_val = float('inf')
-    best_Y = None
-    best_U = None
-    for r in range(n_runs):
-        Y, U, obj_val = kmeans(X, k)
-        #if obj_val is smallest then keep that one
-        if obj_val<best_obj_val:
-            best_obj_val = obj_val
-            best_Y = Y
-            best_U = U
-    #return Y and U of smallest Object Value
-    return(best_Y,best_U,best_obj_val)
-
-#Question 3c
-def chooseK(X, k_candidates=[2,3,4,5,6,7,8,9]):
-    list_obj_val = []
-    for k in k_candidates:
-        Y, U, obj_val = repeatKmeans(X,k)
-        list_obj_val.append(obj_val)
-    return(list_obj_val)
-
-# Question 3c testing
-print("QUESTION 3C")
-Xtrain, Ytrain = generateData(n=100, gen_model=2)
-obj_val_list = chooseK(Xtrain)
-print(f"test_acc:\n{obj_val_list}")
