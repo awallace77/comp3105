@@ -269,7 +269,8 @@ def kmeans(X, k, max_iter=1000):
             min_D = np.inf
             min_cluster = -1
             for j in range(U.shape[0]):
-                D[x, j] = np.linalg.norm(X[x] - U[j])
+                diff = X[x] - U[j]
+                D[x, j] = np.dot(diff,diff)
                 if D[x,j] < min_D: 
                     min_cluster = j
                     min_D = D[x,j]
