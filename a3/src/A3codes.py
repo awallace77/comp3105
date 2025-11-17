@@ -2,6 +2,7 @@ import numpy as np
 from scipy.optimize import minimize
 from scipy.special import logsumexp
 from scipy.linalg import eigh
+from A3helpers import *
 '''
     COMP3105 Assignment 3
     Group 51:
