@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.25 (TeX Live 2023/Debian) (preloaded format=pdflatex 2025.1.16)  22 NOV 2025 12:18
+This is pdfTeX, Version 3.141592653-2.6-1.40.25 (TeX Live 2023/Debian) (preloaded format=pdflatex 2025.1.16)  22 NOV 2025 15:35
 entering extended mode
  restricted \write18 enabled.
  file:line:error style messages enabled.
@@ -195,6 +195,11 @@ Underfull \hbox (badness 10000) in paragraph at lines 47--49
 
  []
 
+
+Overfull \hbox (1.24101pt too wide) in paragraph at lines 57--59
+\OT1/cmr/m/n/12 main, dis-cour-ag-ing the tar-get do-main. https://jmlr.org/papers/volume17/15-239/15-239.pdf 
+ []
+
 [2] (./A4report.aux)
  ***********
 LaTeX2e <2023-11-01> patch level 1
@@ -208,9 +213,9 @@ Here is how much of TeX's memory you used:
  25131 multiletter control sequences out of 15000+600000
  559449 words of font info for 41 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
- 57i,5n,65p,263b,143s stack positions out of 10000i,1000n,20000p,200000b,200000s
+ 57i,5n,65p,289b,143s stack positions out of 10000i,1000n,20000p,200000b,200000s
 </usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmbx12.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmr12.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmtt12.pfb>
-Output written on A4report.pdf (2 pages, 42957 bytes).
+Output written on A4report.pdf (2 pages, 43947 bytes).
 PDF statistics:
  26 PDF objects out of 1000 (max. 8388607)
  15 compressed objects within 1 object stream
