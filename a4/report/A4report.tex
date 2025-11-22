@@ -1,0 +1,55 @@
+\documentclass[12pt]{article}
+
+\usepackage{fullpage}
+\usepackage{fancybox}
+\usepackage{graphicx}
+\usepackage{amssymb}
+\usepackage{amsmath}
+\usepackage{enumerate}
+\usepackage{float} 
+\usepackage{multirow}
+
+
+%%%%%%%%%%%%%% Capsule %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\newcommand{\capsule}[2]{\vspace{0.5em}
+  \shadowbox{%
+    \begin{minipage}{.90\linewidth}%
+      \textbf{#1:}~#2%
+    \end{minipage}}
+  \vspace{0.5em} }
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\newcounter{ques}
+\newenvironment{question}{\stepcounter{ques}{\noindent\bf Question \arabic{ques}:}}{\vspace{5mm}}
+
+\begin{document} 
+
+\begin{center} \Large\bf
+COMP 3105 -- Assignment 4 Report\\
+-- Fall 2025 -- 
+\end{center} 
+
+\begin{center}
+{\bf Due:} Sunday November 30, 2025 23:59. \\
+Group 51 \\
+Andrew Wallace - 101210291\\
+Christer Henrysson - 101260693\\[1em]
+\end{center}
+\textbf{Getting started} \\
+Note that Python 3.11 is used for this assignment. Please install requirements using virtual environment via: \\
+  \texttt{python3.11 -m venv .venv} \\
+  \texttt{source .venv/bin/activate} \\
+  \texttt{pip install -r requirements.txt}
+\vspace{0.5em}
+\newpage 
+
+\section*{Question 1 (5\%) Learning and Classifying}
+Implement a Python function \texttt{learn(path\_to\_in\_domain, path\_to\_out\_domain)} \\[1em]
+Implement a Python function \texttt{compute\_accuracy(path\_to\_eval\_folder, model)} \\[1em]
+
+\section*{Question 2 (5\%) Explanation} 
+In the PDF file, explain your learning algorithm and more importantly, why it is designed this way. The report should be at least 2 pages, but no longer than 8 pages in length.
+
+\section*{Question 3 (5\%) Evaluation} 
+For this question, you don't need to submit/write an answer. We will apply your learning method to different training sets and evaluate the performance of the learned model on hold-out test datasets
+\end{document} 
