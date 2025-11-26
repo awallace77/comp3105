@@ -1,3 +1,12 @@
+# Dependencies
+import torch
+import torch.nn as nn
+import torch.optim as optim
+import torchvision
+import torchvision.transforms as transforms
+import torch.nn.functional as F
+import matplotlib.pyplot as plt
+import numpy as np
 
 '''
     COMP3105 Intro to Machine Learning
@@ -8,41 +17,136 @@
     Due: November 30th, 2025
 '''
 
-# assume: model.feature_extractor, model.label_head, model.domain_head
-# dataloaders: in_loader (labeled), out_unlabeled_loader (unlabeled for domain)
-# combine a batch with domain labels: domain=0 for in, 1 for out
+# Preprocessing
+transform = transforms.Compose(
+    [transforms.ToTensor(),
+     transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
+trainset = torchvision.datasets.CIFAR10(root='./data', train=True, download=True, transform=transform)
+trainloader = torch.utils.data.DataLoader(trainset, batch_size=4, shuffle=True, num_workers=2)
+testset = torchvision.datasets.CIFAR10(root='./data', train=False, download=True, transform=transform)
+testloader = torch.utils.data.DataLoader(testset, batch_size=4, shuffle=False, num_workers=2)
+classes = ('plane', 'car', 'bird', 'cat', 'deer', 'dog', 'frog', 'horse', 'ship', 'truck')
 
-opt_fy = torch.optim.Adam(list(model.feature_extractor.parameters()) +
-                          list(model.label_head.parameters()), lr=1e-4)
-opt_d  = torch.optim.Adam(model.domain_head.parameters(), lr=1e-4)
+# Verify data load
+def imshow(img):
+    img = img / 2 + 0.5               # unnormalize if necessary
+    npimg = img.permute(1, 2, 0).numpy()  # C,H,W → H,W,C
+    plt.imshow(npimg)
+    plt.axis('off')
+    # plt.show() 
+    plt.savefig("img_load.png")
+    plt.clf()
 
-lambda_domain = 5.0   # try 1.0, 5.0, 10.0
+dataiter = iter(trainloader)
+images, labels = next(dataiter)
+labels
+imshow(torchvision.utils.make_grid(images))
 
-for epoch in range(epochs):
-    for (x_in, y_in), x_out in zip(in_loader, out_loader):
-        # build domain batch
-        x_domain = torch.cat([x_in, x_out], dim=0)
-        domain_labels = torch.cat([torch.zeros(len(x_in)), torch.ones(len(x_out))]).long().to(device)
 
-        # forward
-        z_in = model.feature_extractor(x_in)
-        preds = model.label_head(z_in)
-        L_y = criterion(preds, y_in.to(device))
+# Neural Network
+class CNN(nn.Module):
+    def __init__(self, num_classes, in_channels=3):
+        """
+            Building blocks of convolutional neural network.
+            Parameters:
+                * num_classes: Number of classes to predict
+                * in_channels: Number of channels in the input image (for grayscale images, 1, for rgb, 3)
+       """
+       
+        super(CNN, self).__init__()
+        # 2 convolutional layers with 1 max pooling layer
+        self.conv1 = nn.Conv2d(in_channels=in_channels, out_channels=6, kernel_size=5, padding=0)
+        self.pool = nn.MaxPool2d(kernel_size=2, stride=2)
+        self.conv2 = nn.Conv2d(in_channels=6, out_channels=16, kernel_size=5, padding=1)
+        # Fully connected layers
+        # self.fc1 = nn.Linear(16 * 5 * 5, 120)
+        self.fc1 = nn.Linear(16 * 6 * 6, 120)
+        self.fc2 = nn.Linear(120, 84)
+        self.fc3 = nn.Linear(84, 10)
+        
+    def forward(self, x):
+        """
+            Define the forward pass of the neural network.
+            Parameters:
+                x: Input tensor.
+            Returns:
+                torch.Tensor
+                The output tensor after passing through the network.
+        """
+        x = F.relu(self.conv1(x))  # Apply first convolution and ReLU activation
+        x = self.pool(x)           # Apply max pooling
+        x = F.relu(self.conv2(x))  # Apply second convolution and ReLU activation
+        x = self.pool(x)           # Apply max pooling
+        x = x.view(-1, 16 * 6 * 6) # Flatten
+        # x = torch.flatten(x, 1)
+        x = F.relu(self.fc1(x))
+        x = F.relu(self.fc2(x))
+        x = self.fc3(x)
+        
+        return x
 
-        z_domain = model.feature_extractor(x_domain)
-        domain_preds = model.domain_head(z_domain.detach())  # update domain head first
-        L_d_for_d = criterion(domain_preds, domain_labels)
 
-        # 1) update domain head
-        opt_d.zero_grad()
-        L_d_for_d.backward()
-        opt_d.step()
+# Move into GPU or CPU
+device = "cuda" if torch.cuda.is_available() else "cpu"
+model = CNN(in_channels=3, num_classes=10).to(device)
+print(model)
 
-        # 2) update feature extractor + label head to MINIMIZE domain loss as well
-        # recompute domain preds so gradients flow into feature extractor
-        domain_preds_for_f = model.domain_head(z_domain)
-        L_d_for_f = criterion(domain_preds_for_f, domain_labels)
+# Loss function and optimizer
+criterion = nn.CrossEntropyLoss()
+# optimizer = optim.SGD(model.parameters(), lr=0.001, momentum=0.9)
+optimizer = optim.Adam(model.parameters(), lr=0.001)
 
-        opt_fy.zero_grad()
-        (L_y + lambda_domain * L_d_for_f).backward()
-        opt_fy.step()
+# Training the model
+num_epochs=10
+for epoch in range(num_epochs):
+    print(f"Epoch [{epoch + 1}/{num_epochs}]")
+    running_loss = 0.0
+    for i, data in enumerate(trainloader, 0):
+
+        # Move data into device
+        inputs, labels = data
+        inputs = inputs.to(device) 
+        labels = labels.to(device) 
+
+        # Outputs & loss from model
+        outputs = model(inputs)
+        loss = criterion(outputs, labels)
+
+        # Optimize 
+        optimizer.zero_grad()
+        loss.backward()
+        optimizer.step()
+
+        # Calculate loss
+        running_loss += loss.item()
+        if i % 2000 == 1999:
+            print('[%d, %5d] loss: %.3f' %
+                  (epoch + 1, i + 1, running_loss / 2000))
+            running_loss = 0.0
+
+print('Finished Training')
+
+# Test model
+model.eval()
+correct = 0
+total = 0
+with torch.no_grad():
+    for data in testloader:
+        images, labels = data
+        outputs = model(images)
+        _, predicted = torch.max(outputs.data, 1)
+        total += labels.size(0)
+        correct += (predicted == labels).sum().item()
+
+print('Accuracy of the network on the test images: %d %%' % (
+    100 * correct / total))
+
+# Save the model
+torch.save(model.state_dict(), 'MulticlassCNN.pth')
+
+# Create a new model
+loaded_model = CNN(in_channels=1, num_classes=10)
+
+# Load the saved model
+loaded_model.load_state_dict(torch.load('MulticlassCNN.pth'))
+print(loaded_model)
