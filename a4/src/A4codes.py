@@ -12,6 +12,9 @@ import os
 import torch.optim as optim
 from datetime import datetime
 import time
+import torch.nn.functional as F
+import random
+
 '''
     COMP3105 Intro to Machine Learning
     Assignment 4
@@ -30,19 +33,20 @@ class CNN(nn.Module):
         super().__init__()
 
         # Load ResNet model as our CNN (removing final fully connected layer)
-        resnet = models.resnet18(weights=models.ResNet18_Weights.DEFAULT)
+        # resnet = models.resnet18(weights=models.ResNet18_Weights.DEFAULT)
+        resnet = models.resnet18()
         resnet_feature_dim = resnet.fc.in_features
         resnet.fc = nn.Identity() # output feature vector instead of class logits
 
         # Freeze the resnet params (so general features are not collapsed)
-        for param in resnet.parameters():
-            param.requires_grad = False
+        # for param in resnet.parameters():
+        #     param.requires_grad = False
 
-        # Unfreeze last resnet layer params for domain tuning
-        if fine_tune:
-            for name, param in resnet.named_parameters():
-                if "layer3" in name or "layer4" in name:  # last two blocks
-                    param.requires_grad = True
+        # # Unfreeze last resnet layer params for domain tuning
+        # if fine_tune:
+        #     for name, param in resnet.named_parameters():
+        #         if "layer2" in name or "layer3" in name or "layer4" in name:  # last three blocks
+        #             param.requires_grad = True
 
         self.resnet = resnet # Convolution layer
        
@@ -71,7 +75,141 @@ class CNN(nn.Module):
         class_logits = self.class_classifier(features)
         domain_logits = self.domain_classifier(features)
 
-        return class_logits, domain_logits, features       
+        return class_logits, domain_logits, features  
+
+class SimpleCNN(nn.Module):
+    def __init__(self, num_classes=10):
+        super().__init__()
+        self.features = nn.Sequential(
+            nn.Conv2d(3, 32, 3, padding=1),
+            nn.ReLU(),
+            nn.MaxPool2d(2),
+            nn.Conv2d(32, 64, 3, padding=1),
+            nn.ReLU(),
+            nn.MaxPool2d(2),
+            nn.Conv2d(64, 128, 3, padding=1),
+            nn.ReLU(),
+            nn.MaxPool2d(2),
+        )
+        self.classifier = nn.Sequential(
+            nn.Flatten(),
+            nn.Linear(128*28*28, 256),
+            nn.ReLU(),
+            nn.Linear(256, num_classes)
+        )
+        self.domain_classifier = nn.Sequential(
+            nn.Flatten(),
+            nn.Linear(128*28*28, 128),
+            nn.ReLU(),
+            nn.Linear(128, 2)
+        )
+
+    def forward(self, x):
+        feat = self.features(x)
+        class_logits = self.classifier(feat)
+        domain_logits = self.domain_classifier(feat)
+        return class_logits, domain_logits, feat  
+
+class MediumCNN(nn.Module):
+    """Improved MediumCNN with GAP, more channels, and regularization."""
+
+    def __init__(self, num_classes=10):
+        super().__init__()
+
+        def block(in_ch, out_ch):
+            return nn.Sequential(
+                nn.Conv2d(in_ch, out_ch, kernel_size=3, padding=1),
+                nn.BatchNorm2d(out_ch),
+                nn.ReLU(),
+                nn.Conv2d(out_ch, out_ch, kernel_size=3, padding=1),
+                nn.BatchNorm2d(out_ch),
+                nn.ReLU(),
+                nn.MaxPool2d(2)
+            )
+
+        # Feature extractor
+        self.features = nn.Sequential(
+            block(3, 32),    # 224 → 112
+            block(32, 64),   # 112 → 56
+            block(64, 128),  # 56 → 28
+            block(128, 256), # 28 → 14
+        )
+
+        # Global average pooling
+        self.gap = nn.AdaptiveAvgPool2d(1)  # [B, 256, 1, 1]
+        self.flatten_dim = 256
+
+        # Classification head
+        self.classifier = nn.Sequential(
+            nn.Linear(self.flatten_dim, 256),
+            nn.ReLU(),
+            nn.Dropout(0.2),
+            nn.Linear(256, num_classes)
+        )
+
+        # Domain classification head
+        self.domain_classifier = nn.Sequential(
+            nn.Linear(self.flatten_dim, 128),
+            nn.ReLU(),
+            nn.Dropout(0.2),
+            nn.Linear(128, 2)
+        )
+
+    def forward(self, x):
+        feat = self.features(x)
+        feat = self.gap(feat)           # [B, 256, 1, 1]
+        feat = feat.view(feat.size(0), -1)  # [B, 256]
+        class_logits = self.classifier(feat)
+        domain_logits = self.domain_classifier(feat)
+        return class_logits, domain_logits, feat
+
+
+class DeepCNN(nn.Module):
+    def __init__(self, num_classes=10):
+        super().__init__()
+
+        def block(in_ch, out_ch):
+            return nn.Sequential(
+                nn.Conv2d(in_ch, out_ch, 3, padding=1),
+                nn.BatchNorm2d(out_ch),
+                nn.ReLU(),
+                nn.Conv2d(out_ch, out_ch, 3, padding=1),
+                nn.BatchNorm2d(out_ch),
+                nn.ReLU(),
+                nn.MaxPool2d(2)
+            )
+
+        # 224 → 112 → 56 → 28 → 14 → 7
+        self.features = nn.Sequential(
+            block(3, 32),     # 112x112
+            block(32, 64),    # 56x56
+            block(64, 128),   # 28x28
+            block(128, 256),  # 14x14
+            block(256, 512),  # 7x7
+        )
+
+        self.flatten_dim = 512 * 7 * 7
+
+        self.classifier = nn.Sequential(
+            nn.Linear(self.flatten_dim, 512),
+            nn.ReLU(),
+            nn.Dropout(0.4),
+            nn.Linear(512, num_classes)
+        )
+
+        self.domain_classifier = nn.Sequential(
+            nn.Linear(self.flatten_dim, 256),
+            nn.ReLU(),
+            nn.Dropout(0.4),
+            nn.Linear(256, 2)
+        )
+
+    def forward(self, x):
+        feat = self.features(x)
+        feat = feat.view(feat.size(0), -1)
+        class_logits = self.classifier(feat)
+        domain_logits = self.domain_classifier(feat)
+        return class_logits, domain_logits, feat   
 
 class UnlabelledDataset(Dataset):
     """ Custom dataset for the unlabelled images """
@@ -97,7 +235,7 @@ def log(level, msg):
 
 # Preprocess data
 transform = transforms.Compose([
-    transforms.Resize((64, 64)),
+    transforms.Resize((224, 224)),
     transforms.ToTensor(),
     transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
 ])
@@ -158,21 +296,25 @@ def imshow(img, dest_dir="", filename="img"):
 # images, labels = next(dataiter)
 # print(f"Labels: {labels}")
 # imshow(torchvision.utils.make_grid(images), dest_dir=dest_dir, filename="out_eval_image")
+# def learn(path_to_in_domain, path_to_out_domain):
 
-
-def train_model(learning_rate=0.001, num_epochs=10):
+def train_model(
+        learning_rate=0.0001, 
+        num_epochs=10,
+        lambda_ood=2.0):
     """ Trains the CNN model """
 
     # Define CNN and move into GPU (if available) or CPU
-    model = CNN().to(device)
+    # model = MediumCNN().to(device)
+    model = MediumCNN().to(device)
 
-    # Define losses and optimizer
+    # Define optimizer (only optimize parameters that require grad)
+    # optimizer = optim.Adam(filter(lambda p: p.requires_grad, model.parameters()), lr=learning_rate)
+    optimizer = optim.Adam(model.parameters(), lr=learning_rate)
+
+    # Define losses
     criterion_class = nn.CrossEntropyLoss()
     criterion_domain = nn.CrossEntropyLoss()
-    margin_loss = nn.TripletMarginLoss(margin=1.0)
-    # optimizer = optim.Adam(model.parameters(), lr=0.001)
-    # Only optimize parameters that require grad (classifier + layer4)
-    optimizer = optim.Adam(filter(lambda p: p.requires_grad, model.parameters()), lr=learning_rate)
 
     # Trainin model
     in_iter = iter(in_train_loader)
@@ -191,6 +333,8 @@ def train_model(learning_rate=0.001, num_epochs=10):
             except StopIteration:
                 in_iter = iter(in_train_loader)
                 x_in, y_in = next(in_iter)
+            
+            x_in, y_in = x_in.to(device), y_in.to(device)
 
             # Load out domain batch
             try:
@@ -200,60 +344,33 @@ def train_model(learning_rate=0.001, num_epochs=10):
                 x_out = next(out_iter)
 
             # Move data to device
-            x_in, y_in, x_out = x_in.to(device), y_in.to(device), x_out.to(device)
+            x_out = x_out.to(device)
 
             # Forward pass
-            class_logits, domain_logits, feat_in = model(x_in)
-            with torch.no_grad(): # don't compute gradients for out domain
-                feat_out = model.resnet(x_out) 
-
-            # Triplet loss for domain separation
-            anchors = [] # base data (in-domain features)
-            positives = [] # other in-domain sample of the same class (to encourage in-domain classification)
-            negatives = [] # out-domain sample
-
-            # Compute pairwise distances
-            # feat_in: in-domain features
-            # feat_out: out-domain features (detached)
-            feat_out_detached = feat_out.detach()  # ensure no gradients
-
-            for i in range(len(feat_in)):
-                anchor = feat_in[i]
-                anchors.append(anchor)
-
-                # Positive: another in-domain feature of same class
-                same_class_idx = (y_in == y_in[i]).nonzero(as_tuple=True)[0]
-                same_class_idx = same_class_idx[same_class_idx != i]
-                if len(same_class_idx) > 0:
-                    pos_idx = same_class_idx[torch.randint(len(same_class_idx), (1,)).item()]
-                    positive = feat_in[pos_idx]
-                else:
-                    positive = feat_in[i]  # fallback
-                positives.append(positive)
-
-                # Hard negative - closest out-domain feature
-                # distances = torch.norm(anchor - feat_out_detached, dim=1)  # L2 distance
-                # hard_neg_idx = torch.argmin(distances)
-                # negatives.append(feat_out_detached[hard_neg_idx])
-
-                # Random negative (random out domain)
-                neg_indices = torch.randperm(len(feat_out))
-                negatives = [feat_out[idx] for idx in neg_indices[:len(feat_in)]]
-
-            # Stack tensors
-            anchors = torch.stack(anchors)
-            positives = torch.stack(positives)
-            negatives = torch.stack(negatives) 
+            class_in_logits, domain_in_logits, feat_in = model(x_in)
+            class_out_logits, domain_out_logits, feat_out = model(x_out)
 
             # Classification loss
-            class_loss = criterion_class(class_logits, y_in)
+            class_in_loss = criterion_class(class_in_logits, y_in)
 
-            # Separation loss (encourage domain separation)
-            separation_loss = margin_loss(anchors, positives, negatives)
+            # Domain classification 
+            domain_labels_in = torch.zeros(len(x_in), dtype=torch.long).to(device)
+            domain_labels_out = torch.ones(len(x_out), dtype=torch.long).to(device)
+            domain_loss = (
+                criterion_domain(domain_in_logits, domain_labels_in) +
+                criterion_domain(domain_out_logits, domain_labels_out)
+            )
 
-            # Combine to get total loss
-            lambda_triplet = 1.0 # For separation loss
-            loss = class_loss + lambda_triplet * separation_loss
+            # Out-domain loss (force out of domain to uniform classification)
+            p_out = F.log_softmax(class_out_logits, dim=1)
+            uniform = torch.ones_like(class_out_logits) / class_out_logits.size(1)
+            ood_loss = F.kl_div(p_out, uniform, reduction="batchmean")
+            # print("Max OOD softmax prob:", class_out_logits.softmax(1).max(dim=1)[0].mean().item())
+
+            # Total loss 
+            loss = class_in_loss + 0.1 * domain_loss + lambda_ood * ood_loss
+            # loss = class_in_loss + 0.5 * domain_loss
+            # loss = class_in_loss + lambda_ood * ood_loss
 
             # Backprop 
             optimizer.zero_grad()
@@ -266,7 +383,6 @@ def train_model(learning_rate=0.001, num_epochs=10):
 
     return model
 
-
 def save_model(model, dest_dir="", name="model"):
     path = f"{dest_dir}/{name}.pth"
     torch.save(model.state_dict(), path)
@@ -277,67 +393,118 @@ def load_model(model_full_path="model.pth"):
     model.load_state_dict(torch.load(model_full_path))
     return model
 
-# Evaluate model
 def evaluate(loader, model, device):
-    model.resnet.eval()
-    model.class_classifier.eval()
-    correct = 0
+    model.eval()
+    model.to(device)
+
     total = 0
+    correct = 0
+
     with torch.no_grad():
         for images, labels in loader:
             images, labels = images.to(device), labels.to(device)
-            logits, _, _ = model(images)
-            _, predicted = torch.max(logits, 1)
-            total += labels.size(0)
-            correct += (predicted == labels).sum().item()
-    return 100 * correct / total
+
+            class_logits, domain_logits, _ = model(images)
+
+            # Domain prediction - 0 = in, 1 = out
+            domain_pred = domain_logits.argmax(dim=1)
+
+            # For in-domain: use classification prediction
+            class_pred = class_logits.argmax(dim=1)
+
+            # For out-domain choose random label
+            for i in range(len(domain_pred)):
+                if domain_pred[i].item() == 1:  # OUT
+                    class_pred[i] = random.randint(0, 10 - 1)
+
+            # Compute accuracy
+            correct += (class_pred == labels).sum().item()
+            total += images.size(0)
+
+    return correct / total
+
+def evaluate_reg(loader, model, device):
+    model.eval()
+    model.to(device)
+
+    total = 0
+    correct = 0
+
+    with torch.no_grad():
+        for images, labels in loader:
+            images, labels = images.to(device), labels.to(device)
+
+            class_logits, domain_logits, _ = model(images)
+
+            # Domain prediction - 0 = in, 1 = out
+            # domain_pred = domain_logits.argmax(dim=1)
+
+            # For in-domain: use classification prediction
+            class_pred = class_logits.argmax(dim=1)
+
+            # For out-domain choose random label
+            # for i in range(len(domain_pred)):
+                # if domain_pred[i].item() == 1:  # OUT
+                    # class_pred[i] = random.randint(0, 10 - 1)
+
+            # Compute accuracy
+            correct += (class_pred == labels).sum().item()
+            total += images.size(0)
+
+    return correct / total
+
 
 def run_experiments():
     """ Runs experiments for model training """
-
     max_accuracy = -1
     max_model = None
     final_lr = None
     num_epochs = 10
-    learning_rates = [0.005, 0.001, 0.0005, 0.0001]
+    # learning_rates = [0.01, 0.001, 0.0005, 0.0001, 0.00005]
+    learning_rates = [0.001, 0.0005, 0.0001, 0.00005]
+    lambda_ood = [1.0, 0.5, 0.3, 0.1]
+    
     for lr in learning_rates:
 
-        log("INFO", f"Training model (lr = {lr})")
-        start_time = time.time()
-        model = train_model(learning_rate=lr, num_epochs=num_epochs)
-        log("INFO", f"Training finished in {time.time() - start_time:.3f} seconds")
-        in_acc = evaluate(in_eval_loader, model, device)
-        out_acc = evaluate(out_eval_loader, model, device)
-        log("INFO", f"In-domain Accuracy: {in_acc:.2f}%")
-        log("INFO", f"Out-domain Accuracy: {out_acc:.2f}%")
+        for lo in lambda_ood:
 
-        if in_acc > max_accuracy:
-            max_model = model
-            final_lr = lr
-    
+            log("INFO", f"Training model\n\
+                learning_rate = {lr}\n\
+                lambda_ood = {lo}\n")
+
+            start_time = time.time()
+            # model = train_model(learning_rate=lr, 
+                                # lambda_domain=0, 
+                                # lambda_triplet=lt,
+                                # margin=margin,
+                                # num_epochs=num_epochs)
+            model = train_model(learning_rate=lr, num_epochs=num_epochs, lambda_ood=lo)
+            
+            log("INFO", f"Training finished in {time.time() - start_time:.3f} seconds")
+
+            # Evaluate 
+            in_acc = evaluate(in_eval_loader, model, device) * 100
+            out_acc = evaluate(out_eval_loader, model, device) * 100
+            in_acc_reg = evaluate_reg(in_eval_loader, model, device) * 100
+            out_acc_reg = evaluate_reg(out_eval_loader, model, device) * 100
+            log("INFO", f"In-domain Accuracy: {in_acc:.2f}%")
+            log("INFO", f"Out-domain Accuracy: {out_acc:.2f}%\n")
+            log("INFO", f"In-domain Accuracy [REG]: {in_acc_reg:.2f}%")
+            log("INFO", f"Out-domain Accuracy [REG]: {out_acc_reg:.2f}%\n")
+
+            # Find best model
+            if in_acc > max_accuracy:
+                max_model = model
+                final_lr = lr
+                max_accuracy = in_acc
+        
     # Save model w best accuracy
     model_path = "/home/andrew/cu/comp3105/a4"
     model_name = f"resnet_cnn_lr{final_lr}"
     save_model(max_model, model_path, model_name)
 
 if __name__ == "__main__":
-    model_path = "/home/andrew/cu/comp3105/a4"
-    model_name = "resnet_cnn"
-    model_full_path = f"{model_path}/{model_name}.pth"
-
-    # log("INFO", f"Training model")
-    # model = train_model()
-    # save_model(model, model_path, model_name)
-    # log("INFO", f"Done training model")
-    # ## Or load the model
-    # # log("INFO", f"Loading model")
-    # # model = load_model(model_full_path)
-
-    # log("INFO", f"Evaluating model")
-    # in_acc = evaluate(in_eval_loader, model, device)
-    # out_acc = evaluate(out_eval_loader, model, device)
-    # log("INFO", f"Done evaluating model")
-
-    # log("INFO", f"In-domain Accuracy: {in_acc:.2f}%")
-    # log("INFO", f"Out-domain Accuracy: {out_acc:.2f}%")
+    # model_path = "/home/andrew/cu/comp3105/a4"
+    # model_name = "resnet_cnn"
+    # model_full_path = f"{model_path}/{model_name}.pth"
     run_experiments()

@@ -1,0 +1,142 @@
+
+TEST 1
+    - Gradient on Layer 4
+    - learning_rate=0.001
+    - margin=1.0
+    - lambda_triplet = 1.0
+    - In domain ~ 70% acc
+    - Out domain ~ 53% acc
+
+TEST 2
+    - Gradient on Layer 2, 3, and 4
+    - margin = 0.3
+    - lambda_triplet=1.0
+    
+    - learning rate=0.001
+    - In domain ~70.22%
+    - Out domain ~55%
+
+    - learning rate=0.0005
+    - In domain ~76%
+    - Out domain ~60%
+    
+    - learning rate=0.0001
+    - In domain ~71%
+    - Out domain ~58%
+
+    - learning rate=0.00005
+    - In domain ~69%
+    - Out domain ~55%
+    
+TEST 3
+    - Gradient on Layer 2, 3, and 4
+    - margin = 0.3
+    - lambda_triplet=0.8
+    
+    - learning rate=0.001
+    - In domain ~70%
+    - Out domain ~50%
+
+    - learning rate=0.0005
+    - In domain ~72%
+    - Out domain ~57%
+    
+    - learning rate=0.0001
+    - In domain ~%
+    - Out domain ~%
+
+    - learning rate=0.00005
+    - In domain ~69%
+    - Out domain ~55%
+
+TEST 4
+    - Gradient on Layer 2, 3, and 4
+    - margin = 0.2
+    - lambda_triplet=0.8
+    
+    - learning rate=0.001
+    - In domain ~73%
+    - Out domain ~57%
+
+    - learning rate=0.0005
+    - In domain ~78%
+    - Out domain ~58%
+    
+    - learning rate=0.0001
+    - In domain ~74%
+    - Out domain ~59%
+
+    - learning rate=0.00005
+    - In domain ~69%
+    - Out domain ~56%
+
+TEST 5
+    - Gradient on Layer 2, 3, and 4
+    - margin = 0.1
+    - lambda_triplet=0.8
+    
+    - learning rate=0.001
+    - In domain ~70%
+    - Out domain ~54%
+
+    - learning rate=0.0005
+    - In domain ~75%
+    - Out domain ~57%
+    
+    - learning rate=0.0001
+    - In domain ~71%
+    - Out domain ~60%
+
+
+TEST 5
+    - Gradient on Layer 2, 3, and 4
+    - margin = 0.3
+    - lambda_triplet=0.5
+
+    - learning rate=0.0005
+    - In domain ~78%
+    - Out domain ~57%
+    
+TEST 5
+    - Gradient on Layer 2, 3, and 4
+    - margin = 1.0
+    - lambda_triplet=0.5
+
+    - learning rate=0.00
+    - In domain ~%
+    - Out domain ~%
+
+
+
+    return F.conv2d(
+           ^^^^^^^^^
+KeyboardInterrupt
+
+(.venv) andrew@andrew-VivoBook:~/cu/comp3105$ /home/andrew/cu/comp3105/a4/src/.venv/bin/python /home/andrew/cu/comp3105/a4/src/A4codes.py
+2025-11-30 17:05:44 [INFO]: Training model
+                learning_rate = 0.001
+                lambda_ood = 1.0
+
+2025-11-30 17:08:03 [INFO]: [Epoch 1/10] Loss: 1.8191
+2025-11-30 17:10:20 [INFO]: [Epoch 2/10] Loss: 1.7205
+2025-11-30 17:12:31 [INFO]: [Epoch 3/10] Loss: 1.6693
+2025-11-30 17:15:04 [INFO]: [Epoch 4/10] Loss: 1.6380
+2025-11-30 17:18:39 [INFO]: [Epoch 5/10] Loss: 1.6017
+2025-11-30 17:23:00 [INFO]: [Epoch 6/10] Loss: 1.5797
+2025-11-30 17:28:05 [INFO]: [Epoch 7/10] Loss: 1.5488
+2025-11-30 17:33:15 [INFO]: [Epoch 8/10] Loss: 1.5293
+2025-11-30 17:38:30 [INFO]: [Epoch 9/10] Loss: 1.5061
+2025-11-30 17:43:14 [INFO]: [Epoch 10/10] Loss: 1.4772
+2025-11-30 17:43:14 [INFO]: Training finished in 2250.393 seconds
+2025-11-30 17:46:00 [INFO]: In-domain Accuracy: 32.85%
+2025-11-30 17:46:00 [INFO]: Out-domain Accuracy: 18.75%
+
+2025-11-30 17:46:00 [INFO]: In-domain Accuracy [REG]: 38.25%
+2025-11-30 17:46:00 [INFO]: Out-domain Accuracy [REG]: 23.30%
+
+2025-11-30 17:46:00 [INFO]: Training model
+                learning_rate = 0.001
+                lambda_ood = 0.5
+
+2025-11-30 17:49:48 [INFO]: [Epoch 1/10] Loss: 1.7761
+2025-11-30 17:53:44 [INFO]: [Epoch 2/10] Loss: 1.7042
